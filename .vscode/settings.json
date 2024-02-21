@@ -1,0 +1,18 @@
+{
+  "[go]": {
+    "editor.insertSpaces": false,
+    "editor.parameterHints.enabled": true,
+    "togglequotes.chars": ["\"", "'", "`"],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "never",
+      "source.fixAll": "always"
+    },
+    "editor.defaultFormatter": "golang.go",
+    "editor.tabSize": 4
+  },
+  "gopls": {
+    "ui.semanticTokens": true
+  },
+  "cSpell.words": ["Appender"]
+}

@@ -1,0 +1,13 @@
+{
+    "idleHeartbeats": 1829,
+    "navigatingHeartbeats": 527,
+    "totalCodingHeartbeats": 3899,
+    "languageHeartbeats": {
+        "go": 3899
+    },
+    "fileHeartbeats": {
+        "cmd/server/main.go": 1238,
+        "internal/lib/filewriter.go": 1464,
+        "internal/lib/user-writer.go": 1197
+    }
+}
