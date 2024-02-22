@@ -3,6 +3,7 @@ package lib
 import (
 	"os"
 	"sync"
+	// "time"
 )
 
 func NewFileWriter(filePath string) *FileWriter {
@@ -11,26 +12,48 @@ func NewFileWriter(filePath string) *FileWriter {
 		ch: ch,
 	}
 	fw.wg.Add(1)
+	go fileChannel(fw, filePath, ch)
+	return fw
+}
 
-	go func() {
-		defer fw.wg.Done()
-		for chanData := range ch {
-			fileFlag := os.O_CREATE | os.O_WRONLY
-			if chanData.IsAppending {
-				fileFlag = fileFlag | os.O_APPEND
-			}
+func fileChannel(fw *FileWriter, filePath string, ch chan ChannelData) {
+	defer fw.wg.Done()
+	var activeFile *os.File
 
+	isAppending := false
+
+	for chanData := range ch {
+		fileFlag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+		if chanData.IsAppending {
+			fileFlag = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+		}
+
+		if isAppending != chanData.IsAppending || activeFile == nil {
+			isAppending = chanData.IsAppending
 			f, err := os.OpenFile(filePath, fileFlag, 0644)
 			if err != nil {
 				panic(err)
 			}
-			f.WriteString(chanData.String)
-			f.Close()
+			activeFile = f
 		}
 
-	}()
+		if !isAppending {
+			stat, err := activeFile.Stat()
+			if err != nil {
+				panic(err)
+			}
+			if stat.Size() > 0 {
+				activeFile.Seek(0, 0)
+				activeFile.Truncate(0)
+			}
+		}
+		activeFile.WriteString(chanData.String)
 
-	return fw
+	}
+
+	if activeFile != nil {
+		activeFile.Close()
+	}
 }
 
 type ChannelData struct {
