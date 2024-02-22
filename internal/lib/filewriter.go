@@ -38,14 +38,8 @@ func fileChannel(fw *FileWriter, filePath string, ch chan ChannelData) {
 		}
 
 		if !isAppending {
-			stat, err := activeFile.Stat()
-			if err != nil {
-				panic(err)
-			}
-			if stat.Size() > 0 {
-				activeFile.Seek(0, 0)
-				activeFile.Truncate(0)
-			}
+			activeFile.Seek(0, 0)
+			activeFile.Truncate(0)
 		}
 		activeFile.WriteString(chanData.String)
 
