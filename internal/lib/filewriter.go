@@ -7,7 +7,7 @@ import (
 )
 
 func NewFileWriter(filePath string) *FileWriter {
-	var ch = make(chan ChannelData, 100)
+	ch := make(chan ChannelData, 100)
 	fw := &FileWriter{
 		ch: ch,
 	}
@@ -30,7 +30,7 @@ func fileChannel(fw *FileWriter, filePath string, ch chan ChannelData) {
 
 		if isAppending != chanData.IsAppending || activeFile == nil {
 			isAppending = chanData.IsAppending
-			f, err := os.OpenFile(filePath, fileFlag, 0644)
+			f, err := os.OpenFile(filePath, fileFlag, 0o644)
 			if err != nil {
 				panic(err)
 			}
