@@ -3,6 +3,7 @@
 npm-debug.log*
 
 # Private files
+*config.yml
 config.json
 scratch.ts
 private.key
