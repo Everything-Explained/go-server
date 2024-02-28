@@ -1,13 +1,45 @@
 {
-    "idleHeartbeats": 1829,
-    "navigatingHeartbeats": 527,
-    "totalCodingHeartbeats": 3899,
+    "idleHeartbeats": 18613,
+    "navigatingHeartbeats": 7665,
+    "totalCodingHeartbeats": 36831,
     "languageHeartbeats": {
-        "go": 3899
+        "go": 27704,
+        "plaintext": 4766,
+        "jsonc": 1012,
+        "code-text-binary": 75,
+        "go.mod": 310,
+        "go.sum": 94,
+        "pkl": 523,
+        "yaml": 1935,
+        "dotenv": 299,
+        "ignore": 113
     },
     "fileHeartbeats": {
-        "cmd/server/main.go": 1238,
-        "internal/lib/filewriter.go": 1464,
-        "internal/lib/user-writer.go": 1197
+        "cmd/server/main.go": 7884,
+        "internal/lib/filewriter.go": 5591,
+        "internal/lib/user-writer.go": 3328,
+        "users.txt": 2670,
+        "internal/lib/utils.go": 824,
+        ".vscode/settings.json": 319,
+        "f:\\_org-evex\\go-server\\internal\\lib\\filewriter.go.git": 104,
+        "internal/utils/utils.go": 162,
+        "internal/middleware/logger.go": 6849,
+        "logs/log.txt": 1409,
+        "go.mod": 310,
+        "c:\\Users\\exani\\AppData\\Roaming\\Code\\User\\settings.json": 558,
+        "\\settings\\folder": 135,
+        "go.sum": 94,
+        "internal/middleware/middleware.go": 2323,
+        "f:\\_org-evex\\go-server\\internal\\middleware\\logger.go.git": 45,
+        "pkl/configTemplate.pkl": 546,
+        "config.yml": 312,
+        "dev.config.yml": 1120,
+        "prod.config.yml": 503,
+        "internal/lib/config.go": 743,
+        ".env.dev": 299,
+        ".gitignore": 113,
+        "f:\\_org-evex\\go-server\\.gitignore.git": 76,
+        "f:\\_org-evex\\go-server\\internal\\utils\\utils.go.git": 121,
+        "f:\\_org-evex\\go-server\\internal\\lib\\config.go.git": 393
     }
 }
