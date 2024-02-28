@@ -3,9 +3,19 @@ package utils
 import (
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
-var WorkingDir string
+type environment struct {
+	InDev          bool
+	ConfigFilePath string
+}
+
+var (
+	Env        environment
+	WorkingDir string
+)
 
 func init() {
 	wd, err := os.Getwd()
@@ -13,6 +23,17 @@ func init() {
 		panic(err)
 	}
 	WorkingDir = wd
+
+	if err = godotenv.Load(WorkingDir + "\\.env.dev"); err != nil {
+		if err = godotenv.Load(WorkingDir + "\\.env.prod"); err != nil {
+			panic(err)
+		}
+	}
+
+	Env = environment{
+		InDev:          os.Getenv("ENV") == "dev",
+		ConfigFilePath: WorkingDir + "\\" + os.Getenv("CONFIG_FILE"),
+	}
 }
 
 func GetISODateNow() string {
