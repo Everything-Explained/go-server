@@ -82,21 +82,25 @@ func (lh logHandler) IncomingReq(rw *ResponseWriter, req *http.Request) {
 		query,
 		body,
 	}
+
 	l.Printf("%dms|%s|%s|%s|%s|%s|%s|%s\n", a...)
 }
 
 func (lh logHandler) OutgoingResp(rw *ResponseWriter, req *http.Request) {
 	t := time.Now().UnixMicro()
 	tDiff := t - rw.intStore["timestamp"]
+
 	var speedMicro int64 = 0
 	if tDiff > 0 {
 		speedMicro = tDiff
 	}
+
 	var a []any = []any{
 		time.Now().UnixMilli(),
 		rw.strStore["id"],
 		rw.status,
 		speedMicro,
 	}
+
 	l.Printf("%dms|%s|%d|%dµs", a...)
 }
