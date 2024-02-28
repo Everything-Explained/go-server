@@ -1,5 +1,6 @@
 # Logs
 *.log
+*.txt
 npm-debug.log*
 
 # Private files
@@ -69,3 +70,4 @@ test/types/index.js
 
 # compiled app
 dist
+bin
