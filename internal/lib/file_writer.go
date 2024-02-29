@@ -18,31 +18,20 @@ func NewFileWriter(filePath string) *FileWriter {
 
 func fileChannel(fw *FileWriter, filePath string, ch chan ChannelData) {
 	defer fw.wg.Done()
-	var activeFile *os.File
-
-	isAppending := false
+	fileFlag := os.O_CREATE | os.O_RDWR
+	activeFile, err := os.OpenFile(filePath, fileFlag, 0o644)
+	if err != nil {
+		panic(err)
+	}
 
 	for chanData := range ch {
-		fileFlag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
 		if chanData.IsAppending {
-			fileFlag = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+			activeFile.WriteString(chanData.String)
+			continue
 		}
-
-		if isAppending != chanData.IsAppending || activeFile == nil {
-			isAppending = chanData.IsAppending
-			f, err := os.OpenFile(filePath, fileFlag, 0o644)
-			if err != nil {
-				panic(err)
-			}
-			activeFile = f
-		}
-
-		if !isAppending {
-			activeFile.Seek(0, 0)
-			activeFile.Truncate(0)
-		}
+		activeFile.Truncate(0)
+		activeFile.Seek(0, 0)
 		activeFile.WriteString(chanData.String)
-
 	}
 
 	if activeFile != nil {
