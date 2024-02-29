@@ -3,7 +3,6 @@ package lib
 import (
 	"os"
 	"sync"
-	// "time"
 )
 
 func NewFileWriter(filePath string) *FileWriter {
@@ -29,13 +28,27 @@ func fileChannel(fw *FileWriter, filePath string, ch chan ChannelData) {
 			activeFile.WriteString(chanData.String)
 			continue
 		}
-		activeFile.Truncate(0)
-		activeFile.Seek(0, 0)
-		activeFile.WriteString(chanData.String)
+
+		err := activeFile.Truncate(0)
+		if err != nil {
+			panic(err)
+		}
+		_, err = activeFile.Seek(0, 0)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = activeFile.WriteString(chanData.String)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if activeFile != nil {
-		activeFile.Close()
+		err := activeFile.Close()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
