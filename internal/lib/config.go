@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type config struct {
+type ConfigData struct {
 	Red33mPassword string `yaml:"red33m-password"`
 	SecurityHeader string `yaml:"security-header"`
 	Port           int
@@ -22,7 +22,11 @@ type config struct {
 	}
 }
 
-var Config config = config{}
+var config ConfigData = ConfigData{}
+
+func GetConfig() ConfigData {
+	return copyConfig(config)
+}
 
 func init() {
 	content, err := os.ReadFile(utils.Env.ConfigFilePath)
@@ -30,8 +34,12 @@ func init() {
 		panic(err)
 	}
 
-	err = yaml.Unmarshal(content, &Config)
+	err = yaml.Unmarshal(content, &config)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func copyConfig(c ConfigData) ConfigData {
+	return c
 }
