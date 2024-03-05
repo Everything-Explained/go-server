@@ -109,6 +109,7 @@ func FastFileServer(path string, lastModified string) (*FastFile, error) {
 	isFastGet := time.Now().UnixMilli()-cachedFile.lastGetMilli < minMilliBeforeFastGet
 	cachedFile.Unlock()
 
+	// If Not-Modified zero out content for 304
 	if isFastGet && cachedFile.lastModified == lastModified {
 		return getFastFile(cachedFile, true), nil
 	}
@@ -122,8 +123,8 @@ func FastFileServer(path string, lastModified string) (*FastFile, error) {
 		return nil, err
 	}
 
+	// Clear Cache
 	if !isFastGet && cachedFile.length > 0 {
-		fmt.Println("clearing cache")
 		cachedFile.Lock()
 		cachedFile.content = []byte{}
 		cachedFile.length = 0
@@ -132,8 +133,8 @@ func FastFileServer(path string, lastModified string) (*FastFile, error) {
 
 	ff := getFastFile(fi, false)
 
+	// Update Cache
 	if isFastGet && cachedFile.length == 0 && ff.Length > 0 {
-		fmt.Println("updating cache")
 		cachedFile.Lock()
 		cachedFile.content = ff.Content
 		cachedFile.length = ff.Length
