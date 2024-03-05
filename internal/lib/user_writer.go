@@ -70,6 +70,7 @@ func saveUsers(u *userWriter) {
 	var sb strings.Builder
 
 	u.Lock()
+	sb.Grow(len(u.data))
 	for k, v := range u.data {
 		sb.WriteString(fmt.Sprintf("%s: %d\n", k, v))
 	}
