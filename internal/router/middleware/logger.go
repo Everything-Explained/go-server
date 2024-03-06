@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/internal/utils"
 	"github.com/jaevor/go-nanoid"
 )
@@ -28,10 +30,7 @@ func init() {
 		panic(err)
 	}
 
-	id, err := nanoid.Standard(8)
-	if err != nil {
-		panic(err)
-	}
+	id, _ := nanoid.Standard(8)
 	getID = id
 
 	f, err := os.OpenFile(filePath, fileFlags, 0o644)
@@ -43,7 +42,7 @@ func init() {
 
 type logHandler struct{}
 
-func (lh logHandler) IncomingReq(rw *ResponseWriter, req *http.Request) {
+func (lh logHandler) IncomingReq(rw *router.ResponseWriter, req *http.Request) {
 	query := ""
 	if req.URL.RawQuery != "" {
 		query = req.URL.RawQuery
@@ -53,9 +52,10 @@ func (lh logHandler) IncomingReq(rw *ResponseWriter, req *http.Request) {
 	if req.Body != nil {
 		data, err := io.ReadAll(req.Body)
 		if err != nil {
-			panic(err)
+			body = fmt.Sprintf("body_error: %s", err)
+		} else {
+			body = string(data)
 		}
-		body = string(data)
 	}
 
 	host := req.Host
@@ -68,13 +68,13 @@ func (lh logHandler) IncomingReq(rw *ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	rw.strStore["id"] = getID()
-	rw.intStore["timestamp"] = time.Now().UnixMicro()
+	id := rw.StoreStr("id", getID())
+	rw.StoreInt("timestamp", time.Now().UnixMicro())
 
 	agent := strings.Join(req.Header["User-Agent"], ",")
 	var a []any = []any{
 		time.Now().UnixMilli(),
-		rw.strStore["id"],
+		id,
 		agent,
 		req.Method,
 		host,
@@ -86,9 +86,8 @@ func (lh logHandler) IncomingReq(rw *ResponseWriter, req *http.Request) {
 	l.Printf("%dms|%s|%s|%s|%s|%s|%s|%s\n", a...)
 }
 
-func (lh logHandler) OutgoingResp(rw *ResponseWriter, req *http.Request) {
-	t := time.Now().UnixMicro()
-	tDiff := t - rw.intStore["timestamp"]
+func (lh logHandler) OutgoingResp(rw *router.ResponseWriter, req *http.Request) {
+	tDiff := time.Now().UnixMicro() - rw.GetInt("timestamp")
 
 	var speedMicro int64 = 0
 	if tDiff > 0 {
@@ -97,8 +96,8 @@ func (lh logHandler) OutgoingResp(rw *ResponseWriter, req *http.Request) {
 
 	var a []any = []any{
 		time.Now().UnixMilli(),
-		rw.strStore["id"],
-		rw.status,
+		rw.GetStr("id"),
+		rw.GetStatus(),
 		speedMicro,
 	}
 
