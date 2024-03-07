@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/Everything-Explained/go-server/internal/lib"
+	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/internal/utils"
 )
 
@@ -17,5 +17,6 @@ func main() {
 		config.Port,
 		config.Mail.Host,
 	)
-	http.ListenAndServe("127.0.0.1:8080", nil)
+	r := router.NewRouter()
+	r.Listen("127.0.0.1", config.Port)
 }
