@@ -42,6 +42,14 @@ func init() {
 
 type logHandler struct{}
 
+/*
+IncomingReq stores all relevant request data for logging with the
+OutgoingResp middleware. The OutgoingResp middleware should be
+declared "after" your default handler function.
+
+📝 Requires the OutgoingResp middleware to write the
+log to file.
+*/
 func (lh logHandler) IncomingReq(rw *router.ResponseWriter, req *http.Request) {
 	query := ""
 	if req.URL.RawQuery != "" {
@@ -68,38 +76,48 @@ func (lh logHandler) IncomingReq(rw *router.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	id := rw.StoreStr("id", getID())
 	rw.StoreInt("timestamp", time.Now().UnixMicro())
-
+	id := getID()
 	agent := strings.Join(req.Header["User-Agent"], ",")
-	var a []any = []any{
-		time.Now().UnixMilli(),
+	timeMs := time.Now().UnixMilli()
+	country := strings.Join(req.Header[http.CanonicalHeaderKey("CF-IPCountry")], ",")
+
+	rw.StoreStr("incoming_req", fmt.Sprintf("%dms|%s|%s|%s|%s|%s|%s|%s|%s",
+		timeMs,
 		id,
 		agent,
 		req.Method,
 		host,
+		country,
 		url.Path,
 		query,
 		body,
-	}
-
-	l.Printf("%dms|%s|%s|%s|%s|%s|%s|%s\n", a...)
+	))
 }
 
+/*
+OutgoingResp gets the status code & time it took (in microseconds) to
+complete the request. It then appends that information to the log
+info left by the IncomingReq middleware, and prints it all to
+the log file.
+
+🔴 Panics if IncomingReq has not added its part of the log
+*/
 func (lh logHandler) OutgoingResp(rw *router.ResponseWriter, req *http.Request) {
 	tDiff := time.Now().UnixMicro() - rw.GetInt("timestamp")
+
+	incomingLog := rw.GetStr("incoming_req")
+	if incomingLog == "" {
+		panic("cannot properly attach outgoing-res log without incoming-req log middleware")
+	}
 
 	var speedMicro int64 = 0
 	if tDiff > 0 {
 		speedMicro = tDiff
 	}
 
-	var a []any = []any{
-		time.Now().UnixMilli(),
-		rw.GetStr("id"),
+	l.Printf("%s|%s", incomingLog, fmt.Sprintf("%d|%dµs\n",
 		rw.GetStatus(),
 		speedMicro,
-	}
-
-	l.Printf("%dms|%s|%d|%dµs", a...)
+	))
 }
