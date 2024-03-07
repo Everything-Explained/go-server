@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/Everything-Explained/go-server/internal/router/http_interface"
+	"github.com/Everything-Explained/go-server/internal/router/middleware"
 )
 
 type (
-	HTTPFunc   = func(rw *ResponseWriter, req *http.Request)
+	HTTPFunc   = func(rw *http_interface.ResponseWriter, req *http.Request)
 	Middleware = []HTTPFunc
 
-	GuardFunc = func(rw *ResponseWriter, req *http.Request) (string, int)
+	GuardFunc = func(rw *http_interface.ResponseWriter, req *http.Request) (string, int)
 	GuardData struct {
 		// Middleware that is executed before the handler
 		PreMiddleware []HTTPFunc
@@ -19,11 +22,6 @@ type (
 		// Function responsible for main route functionality
 		Handler HTTPFunc
 	}
-)
-
-const (
-	maxIntStoreSize = 10
-	maxStrStoreSize = 10
 )
 
 func NewRouter() *router {
@@ -100,7 +98,7 @@ func createHandler(route string, mw Middleware) {
 		panic("route needs at least one handler function")
 	}
 	http.HandleFunc(route, func(rw http.ResponseWriter, req *http.Request) {
-		customResWriter := createResponseWriter(rw)
+		customResWriter := http_interface.CreateResponseWriter(rw)
 		for _, f := range mw {
 			f(customResWriter, req)
 		}
@@ -117,12 +115,16 @@ func createGuardHandler(pattern string, guard GuardFunc, data GuardData) {
 	if data.Handler == nil {
 		panic("the default handler for a route guard cannot be nil")
 	}
+
 	http.Handle(pattern, http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		customResWriter := createResponseWriter(rw)
+		customResWriter := http_interface.CreateResponseWriter(rw)
+		log := middleware.LogHandler
+		log.IncomingReq(customResWriter, req)
 		msg, status := guard(customResWriter, req)
 		if status >= 400 {
 			rw.WriteHeader(status)
 			fmt.Fprint(rw, msg)
+			log.OutgoingResp(customResWriter, req)
 			return
 		}
 
@@ -140,46 +142,4 @@ func createGuardHandler(pattern string, guard GuardFunc, data GuardData) {
 			}
 		}
 	}))
-}
-
-func createResponseWriter(rw http.ResponseWriter) *ResponseWriter {
-	return &ResponseWriter{
-		ResponseWriter: rw,
-		strStore:       make(map[string]string, maxStrStoreSize),
-		intStore:       make(map[string]int64, maxIntStoreSize),
-	}
-}
-
-type ResponseWriter struct {
-	http.ResponseWriter
-	strStore map[string]string
-	intStore map[string]int64
-	status   int
-}
-
-func (rw *ResponseWriter) StoreStr(id string, val string) string {
-	rw.strStore[id] = val
-	return val
-}
-
-func (rw *ResponseWriter) StoreInt(id string, val int64) int64 {
-	rw.intStore[id] = val
-	return val
-}
-
-func (rw *ResponseWriter) GetInt(id string) int64 {
-	return rw.intStore[id]
-}
-
-func (rw *ResponseWriter) GetStr(id string) string {
-	return rw.strStore[id]
-}
-
-func (rw *ResponseWriter) GetStatus() int {
-	return rw.status
-}
-
-func (rw *ResponseWriter) WriteHeader(status int) {
-	rw.status = status
-	rw.ResponseWriter.WriteHeader(status)
 }

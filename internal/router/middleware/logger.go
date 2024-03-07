@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Everything-Explained/go-server/internal/router"
+	"github.com/Everything-Explained/go-server/internal/router/http_interface"
 	"github.com/Everything-Explained/go-server/internal/utils"
 	"github.com/jaevor/go-nanoid"
 )
@@ -50,7 +50,7 @@ declared "after" your default handler function.
 📝 Requires the OutgoingResp middleware to write the
 log to file.
 */
-func (lh logHandler) IncomingReq(rw *router.ResponseWriter, req *http.Request) {
+func (lh logHandler) IncomingReq(rw *http_interface.ResponseWriter, req *http.Request) {
 	query := ""
 	if req.URL.RawQuery != "" {
 		query = req.URL.RawQuery
@@ -103,7 +103,7 @@ the log file.
 
 🔴 Panics if IncomingReq has not added its part of the log
 */
-func (lh logHandler) OutgoingResp(rw *router.ResponseWriter, req *http.Request) {
+func (lh logHandler) OutgoingResp(rw *http_interface.ResponseWriter, req *http.Request) {
 	tDiff := time.Now().UnixMicro() - rw.GetInt("timestamp")
 
 	incomingLog := rw.GetStr("incoming_req")
