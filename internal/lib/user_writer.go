@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -36,6 +37,18 @@ func (u *userWriter) AddUser(isRed33m bool) {
 	u.data[newID] = userState
 	u.fw.WriteString(fmt.Sprintf("%s: %b\n", newID, userState), true)
 	u.Unlock()
+}
+
+func (u *userWriter) GetUser(id string) (uint8, error) {
+	u.Lock()
+	userState, exists := u.data[id]
+	u.Unlock()
+
+	if !exists {
+		return 0, errors.New("user not found")
+	}
+
+	return userState, nil
 }
 
 func (u *userWriter) UpdateUser(id string, isRed33m bool) {
