@@ -6,6 +6,7 @@ import (
 	"github.com/Everything-Explained/go-server/internal"
 	"github.com/Everything-Explained/go-server/internal/lib"
 	"github.com/Everything-Explained/go-server/internal/router"
+	"github.com/Everything-Explained/go-server/internal/router/routes"
 )
 
 func main() {
@@ -18,5 +19,6 @@ func main() {
 		config.Mail.Host,
 	)
 	r := router.NewRouter()
+	routes.AddAPISetupRoute(r)
 	r.Listen("127.0.0.1", config.Port)
 }

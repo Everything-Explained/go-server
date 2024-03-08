@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -10,16 +9,29 @@ import (
 	"github.com/Everything-Explained/go-server/internal/router/http_interface"
 )
 
-var APIGuardData router.GuardData = router.GuardData{
-	CanLog:  false,
-	Handler: apiHandler,
+func AddAPISetupRoute(r *router.Router) {
+	r.AddGetGuard("/api/setup", apiGuardFunc, router.GuardData{
+		CanLog:  true,
+		Handler: setupRoute,
+	})
 }
 
-func APIGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string, int) {
-	// Don't punish users for setting up authorization
-	if req.URL.Path == "/api/setup" {
-		return "", 0
+func setupRoute(rw *http_interface.ResponseWriter, req *http.Request) {
+	token := rw.GetStr("token")
+	if !rw.GetBool("hasAuth") {
+		token = lib.UserWriter.AddUser(false)
 	}
+
+	red33mStatus := "no"
+	if rw.GetBool("isRed33med") {
+		red33mStatus = "yes"
+	}
+
+	rw.Header().Add("X-Evex-Token", token)
+	rw.Header().Add("X-Evex-Red33m", red33mStatus)
+	// todo - send versions.json file
+	rw.WriteHeader(200)
+}
 
 func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string, int) {
 	isSettingUp := req.URL.Path == "/api/setup"
@@ -50,10 +62,4 @@ func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string,
 	rw.StoreBool("hasAuth", true)
 	rw.StoreStr("token", token)
 	return "", 0
-}
-
-func apiHandler(rw *http_interface.ResponseWriter, req *http.Request) {
-	isRed33med := rw.GetBool("isRed33med")
-	fmt.Println(isRed33med)
-	rw.WriteHeader(200)
 }
