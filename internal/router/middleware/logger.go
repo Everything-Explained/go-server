@@ -21,11 +21,12 @@ var (
 )
 
 func init() {
-	folderPath := utils.WorkingDir + "\\logs"
+	wd := utils.GetWorkingDir()
+	folderPath := wd + "\\logs"
 	filePath := folderPath + "\\log.txt"
 	fileFlags := os.O_WRONLY | os.O_CREATE | os.O_APPEND
 
-	err := os.MkdirAll(utils.WorkingDir+"\\logs", 0o755)
+	err := os.MkdirAll(wd+"\\logs", 0o755)
 	if err != nil {
 		panic(err)
 	}

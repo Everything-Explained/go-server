@@ -12,7 +12,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-var userFile string = utils.WorkingDir + "\\users.txt"
+var userFile string = utils.GetWorkingDir() + "\\users.txt"
 
 var UserWriter = &userWriter{
 	fw:   NewFileWriter(userFile),

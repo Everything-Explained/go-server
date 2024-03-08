@@ -4,37 +4,19 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
-type environment struct {
-	InDev          bool
-	ConfigFilePath string
-}
+var workingDir string
 
-var (
-	Env        environment
-	WorkingDir string
-)
-
-func init() {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	WorkingDir = wd
-
-	if err = godotenv.Load(WorkingDir + "\\.env.dev"); err != nil {
-		if err = godotenv.Load(WorkingDir + "\\.env.prod"); err != nil {
+func GetWorkingDir() string {
+	if workingDir == "" {
+		wd, err := os.Getwd()
+		if err != nil {
 			panic(err)
 		}
+		workingDir = wd
 	}
-
-	Env = environment{
-		InDev:          os.Getenv("ENV") == "dev",
-		ConfigFilePath: WorkingDir + "\\" + os.Getenv("CONFIG_FILE"),
-	}
+	return workingDir
 }
 
 func GetISODateNow() string {

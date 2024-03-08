@@ -3,7 +3,7 @@ package lib
 import (
 	"os"
 
-	"github.com/Everything-Explained/go-server/internal/utils"
+	"github.com/Everything-Explained/go-server/internal"
 	"gopkg.in/yaml.v3"
 )
 
@@ -29,7 +29,7 @@ func GetConfig() ConfigData {
 }
 
 func init() {
-	content, err := os.ReadFile(utils.Env.ConfigFilePath)
+	content, err := os.ReadFile(internal.GetEnv().ConfigFilePath)
 	if err != nil {
 		panic(err)
 	}
