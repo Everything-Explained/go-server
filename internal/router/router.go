@@ -26,11 +26,11 @@ type (
 	}
 )
 
-func NewRouter() *router {
-	return &router{}
+func NewRouter() *Router {
+	return &Router{}
 }
 
-type router struct{}
+type Router struct{}
 
 // Get handles the GET method for the specified path and accepts
 // middlewares, including the main handler for this route. The
@@ -39,31 +39,31 @@ type router struct{}
 // NOTE: Handlers execute one after the other; there is no way
 // to pause or stop the chain. If you need to guard (stop)
 // a route
-func (r *router) Get(path string, handlers ...HTTPFunc) {
+func (r *Router) Get(path string, handlers ...HTTPFunc) {
 	validatePath(path)
 	route := fmt.Sprintf("GET %s", path)
 	createHandler(route, handlers)
 }
 
-func (r *router) Post(path string, handlers ...HTTPFunc) {
+func (r *Router) Post(path string, handlers ...HTTPFunc) {
 	validatePath(path)
 	route := fmt.Sprintf("POST %s", path)
 	createHandler(route, handlers)
 }
 
-func (r *router) Patch(path string, handlers ...HTTPFunc) {
+func (r *Router) Patch(path string, handlers ...HTTPFunc) {
 	validatePath(path)
 	route := fmt.Sprintf("PATCH %s", path)
 	createHandler(route, handlers)
 }
 
-func (r *router) Delete(path string, handlers ...HTTPFunc) {
+func (r *Router) Delete(path string, handlers ...HTTPFunc) {
 	validatePath(path)
 	route := fmt.Sprintf("DELETE %s", path)
 	createHandler(route, handlers)
 }
 
-func (r *router) Listen(addr string, port int) {
+func (r *Router) Listen(addr string, port int) {
 	http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), nil)
 }
 
@@ -78,25 +78,25 @@ middleware has been included, behind the flag: GuardData.CanLog
 
 🔴 Panics if no handler is provided in GuardData
 */
-func (r *router) AddGetGuard(path string, guard GuardFunc, gd GuardData) {
+func (r *Router) AddGetGuard(path string, guard GuardFunc, gd GuardData) {
 	validatePath(path)
 	pattern := fmt.Sprintf("GET %s", path)
 	createGuardHandler(pattern, guard, gd)
 }
 
-func (r *router) AddPostGuard(path string, guard GuardFunc, data GuardData) {
+func (r *Router) AddPostGuard(path string, guard GuardFunc, data GuardData) {
 	validatePath(path)
 	pattern := fmt.Sprintf("POST %s", path)
 	createGuardHandler(pattern, guard, data)
 }
 
-func (r *router) AddPatchGuard(path string, guard GuardFunc, data GuardData) {
+func (r *Router) AddPatchGuard(path string, guard GuardFunc, data GuardData) {
 	validatePath(path)
 	pattern := fmt.Sprintf("PATCH %s", path)
 	createGuardHandler(pattern, guard, data)
 }
 
-func (r *router) AddDeleteGuard(path string, guard GuardFunc, data GuardData) {
+func (r *Router) AddDeleteGuard(path string, guard GuardFunc, data GuardData) {
 	validatePath(path)
 	pattern := fmt.Sprintf("DELETE %s", path)
 	createGuardHandler(pattern, guard, data)
