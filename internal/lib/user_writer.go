@@ -27,7 +27,7 @@ type userWriter struct {
 	isSaving bool
 }
 
-func (u *userWriter) AddUser(isRed33m bool) {
+func (u *userWriter) AddUser(isRed33m bool) string {
 	var userState uint8 = 0
 	if isRed33m {
 		userState = 1
@@ -37,6 +37,7 @@ func (u *userWriter) AddUser(isRed33m bool) {
 	u.data[newID] = userState
 	u.fw.WriteString(fmt.Sprintf("%s: %b\n", newID, userState), true)
 	u.Unlock()
+	return newID
 }
 
 func (u *userWriter) GetUserState(id string) (uint8, error) {
