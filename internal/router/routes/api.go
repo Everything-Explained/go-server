@@ -26,37 +26,29 @@ func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string,
 	uw := lib.UserWriter
 	auth := req.Header["Authorization"]
 
-	nonAuthedSetup := func() (string, int) {
+	if len(auth) == 0 {
+		return "missing auth", 401
+	}
+
+	if !strings.HasPrefix(auth[0], "Bearer ") {
+		return "missing bearer", 401
+	}
+
+	if isSettingUp && auth[0] == "Bearer setup" {
 		rw.StoreBool("isRed33med", false)
 		rw.StoreBool("hasAuth", false)
 		return "", 0
 	}
 
-	if len(auth) == 0 {
-		if isSettingUp {
-			return nonAuthedSetup()
-		}
-		return "missing auth", 401
-	}
-
-	if !strings.HasPrefix(auth[0], "Bearer ") {
-		if isSettingUp {
-			return nonAuthedSetup()
-		}
-		return "missing bearer", 401
-	}
-
 	token := strings.Split(auth[0], " ")[1]
 	userState, err := uw.GetUserState(token)
 	if err != nil {
-		if isSettingUp {
-			return nonAuthedSetup()
-		}
 		return "invalid auth", 403
 	}
 
 	rw.StoreBool("isRed33med", userState == 1)
 	rw.StoreBool("hasAuth", true)
+	rw.StoreStr("token", token)
 	return "", 0
 }
 
