@@ -3,19 +3,23 @@ package utils
 import (
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
 
-var workingDir string
+var (
+	workingDir string
+	once       sync.Once
+)
 
 func GetWorkingDir() string {
-	if workingDir == "" {
+	once.Do(func() {
 		wd, err := os.Getwd()
 		if err != nil {
 			panic(err)
 		}
 		workingDir = wd
-	}
+	})
 	return workingDir
 }
 
