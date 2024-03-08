@@ -39,7 +39,7 @@ func (u *userWriter) AddUser(isRed33m bool) {
 	u.Unlock()
 }
 
-func (u *userWriter) GetUser(id string) (uint8, error) {
+func (u *userWriter) GetUserState(id string) (uint8, error) {
 	u.Lock()
 	userState, exists := u.data[id]
 	u.Unlock()
