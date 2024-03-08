@@ -21,6 +21,8 @@ type (
 		PostMiddleware []HTTPFunc
 		// Function responsible for main route functionality
 		Handler HTTPFunc
+		// Enable or disable logging (off by default)
+		CanLog bool
 	}
 )
 
@@ -65,14 +67,21 @@ func (r *router) Listen(addr string, port int) {
 	http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), nil)
 }
 
-// AddGetGuard guards the specified path string with a function which returns
-// a message and HTTP status code. A code >= to 400 results in the message
-// and status code being written to the response, skipping handler and
-// all middleware execution.
-func (r *router) AddGetGuard(path string, guard GuardFunc, data GuardData) {
+/*
+AddGetGuard guards the specified path string with a function that returns
+a message and HTTP status code. A code >= to 400 results in the message
+and status code being written to the response, skipping handler and
+all middleware execution.
+
+📝 Because middleware cannot be executed before the guard, the logging
+middleware has been included, behind the flag: GuardData.CanLog
+
+🔴 Panics if no handler is provided in GuardData
+*/
+func (r *router) AddGetGuard(path string, guard GuardFunc, gd GuardData) {
 	validatePath(path)
 	pattern := fmt.Sprintf("GET %s", path)
-	createGuardHandler(pattern, guard, data)
+	createGuardHandler(pattern, guard, gd)
 }
 
 func (r *router) AddPostGuard(path string, guard GuardFunc, data GuardData) {
@@ -111,33 +120,38 @@ func validatePath(path string) {
 	}
 }
 
-func createGuardHandler(pattern string, guard GuardFunc, data GuardData) {
-	if data.Handler == nil {
+func createGuardHandler(pattern string, guard GuardFunc, gd GuardData) {
+	if gd.Handler == nil {
 		panic("the default handler for a route guard cannot be nil")
 	}
 
 	http.Handle(pattern, http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		customResWriter := http_interface.CreateResponseWriter(rw)
-		log := middleware.LogHandler
-		log.IncomingReq(customResWriter, req)
+
+		if gd.CanLog {
+			middleware.LogHandler.IncomingReq(customResWriter, req)
+			defer func() {
+				middleware.LogHandler.OutgoingResp(customResWriter, req)
+			}()
+		}
+
 		msg, status := guard(customResWriter, req)
 		if status >= 400 {
-			rw.WriteHeader(status)
-			fmt.Fprint(rw, msg)
-			log.OutgoingResp(customResWriter, req)
+			customResWriter.WriteHeader(status)
+			fmt.Fprint(customResWriter, msg)
 			return
 		}
 
-		if len(data.PreMiddleware) > 0 {
-			for _, f := range data.PreMiddleware {
+		if len(gd.PreMiddleware) > 0 {
+			for _, f := range gd.PreMiddleware {
 				f(customResWriter, req)
 			}
 		}
 
-		data.Handler(customResWriter, req)
+		gd.Handler(customResWriter, req)
 
-		if len(data.PostMiddleware) > 0 {
-			for _, f := range data.PostMiddleware {
+		if len(gd.PostMiddleware) > 0 {
+			for _, f := range gd.PostMiddleware {
 				f(customResWriter, req)
 			}
 		}
