@@ -75,6 +75,17 @@ type FastFile struct {
 
 var cache = make(map[string]*CachedFile)
 
+var mimeType = map[string]string{
+	".html": "text/html",
+	".json": "application/json",
+	".js":   "text/javascript",
+	".css":  "text/css",
+	".md":   "text/markdown",
+	".png":  "image/png",
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+}
+
 const minMilliBeforeFastGet int64 = 120
 
 var mu sync.Mutex
@@ -187,18 +198,7 @@ func getFastFile(fi FileInfoInterface, forceZeroLength bool) *FastFile {
 func getContentType(ext string) string {
 	charset := "charset=utf-8"
 
-	mimeTypes := map[string]string{
-		".html": "text/html",
-		".json": "application/json",
-		".js":   "text/javascript",
-		".css":  "text/css",
-		".md":   "text/markdown",
-		".png":  "image/png",
-		".jpg":  "image/jpeg",
-		".jpeg": "image/jpeg",
-	}
-
-	if mt, exists := mimeTypes[ext]; exists {
+	if mt, exists := mimeType[ext]; exists {
 		if strings.Contains(mt, "image") {
 			return mt
 		}
