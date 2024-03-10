@@ -107,7 +107,7 @@ func createHandler(route string, mw Middleware) {
 		panic("route needs at least one handler function")
 	}
 	http.HandleFunc(route, func(rw http.ResponseWriter, req *http.Request) {
-		customResWriter := http_interface.CreateResponseWriter(rw)
+		customResWriter := http_interface.CreateResponseWriter(rw, req)
 		for _, f := range mw {
 			f(customResWriter, req)
 		}
@@ -126,7 +126,7 @@ func createGuardHandler(pattern string, guard GuardFunc, gd GuardData) {
 	}
 
 	http.Handle(pattern, http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		customResWriter := http_interface.CreateResponseWriter(rw)
+		customResWriter := http_interface.CreateResponseWriter(rw, req)
 
 		if gd.CanLog {
 			middleware.LogHandler.IncomingReq(customResWriter, req)

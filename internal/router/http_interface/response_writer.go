@@ -1,6 +1,9 @@
 package http_interface
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+)
 
 const (
 	maxIntStoreSize  = 10
@@ -14,6 +17,7 @@ type ResponseWriter struct {
 	intStore  map[string]int64
 	boolStore map[string]bool
 	status    int
+	body      string
 }
 
 func (rw *ResponseWriter) StoreStr(id string, val string) string {
@@ -47,16 +51,33 @@ func (rw *ResponseWriter) GetStatus() int {
 	return rw.status
 }
 
+/*
+GetBody gets the cached body of the http.Request that this ResponseWriter
+is paired with.
+
+🟠 Use this method to get the body instead of http.Request.Body,
+as it will always be empty in the presence of this ResponseWriter.
+*/
+func (rw *ResponseWriter) GetBody() string {
+	return string(rw.body)
+}
+
 func (rw *ResponseWriter) WriteHeader(status int) {
 	rw.status = status
 	rw.ResponseWriter.WriteHeader(status)
 }
 
-func CreateResponseWriter(rw http.ResponseWriter) *ResponseWriter {
+func CreateResponseWriter(rw http.ResponseWriter, req *http.Request) *ResponseWriter {
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		// todo - log to server error log
+		panic(err)
+	}
 	return &ResponseWriter{
 		ResponseWriter: rw,
 		strStore:       make(map[string]string, maxStrStoreSize),
 		intStore:       make(map[string]int64, maxIntStoreSize),
 		boolStore:      make(map[string]bool, maxBoolStoreSize),
+		body:           string(body),
 	}
 }

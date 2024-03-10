@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -57,16 +56,6 @@ func (lh logHandler) IncomingReq(rw *http_interface.ResponseWriter, req *http.Re
 		query = req.URL.RawQuery
 	}
 
-	body := ""
-	if req.Body != nil {
-		data, err := io.ReadAll(req.Body)
-		if err != nil {
-			body = fmt.Sprintf("body_error: %s", err)
-		} else {
-			body = string(data)
-		}
-	}
-
 	host := req.Host
 	if host == "" {
 		host = req.RemoteAddr
@@ -92,7 +81,7 @@ func (lh logHandler) IncomingReq(rw *http_interface.ResponseWriter, req *http.Re
 		country,
 		url.Path,
 		query,
-		body,
+		rw.GetBody(),
 	))
 }
 
