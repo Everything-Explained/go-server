@@ -52,7 +52,6 @@ AddStaticRoute sets up a route handler with the specified path, to serve
 files from the specified folder, using FastFileServer.
 */
 func (r *Router) AddStaticRoute(path string, folder string) {
-	validatePath(path)
 	staticDir := fmt.Sprintf("C:\\Server\\evex-production\\client\\%s", folder)
 	if _, err := os.Stat(staticDir); err != nil {
 		if strings.Contains(err.Error(), "cannot find") {
@@ -60,29 +59,26 @@ func (r *Router) AddStaticRoute(path string, folder string) {
 		}
 		panic(err)
 	}
-
-	createHandler(
+	r.Get(
 		fmt.Sprintf("%s/{file}", path),
-		[]func(rw *http_interface.ResponseWriter, req *http.Request){
-			// NOTE  Maybe cache 404 requests in the future (micro-optimization)
-			func(rw *http_interface.ResponseWriter, req *http.Request) {
-				if !strings.Contains(req.URL.Path, ".") {
+		// NOTE  Maybe cache 404 requests in the future (micro-optimization)
+		func(rw *http_interface.ResponseWriter, req *http.Request) {
+			if !strings.Contains(req.URL.Path, ".") {
+				rw.WriteHeader(404)
+				return
+			}
+			file := req.PathValue("file")
+			ff, err := lib.FastFileServer(fmt.Sprintf("%s\\%s", staticDir, file), "")
+			if err != nil {
+				if os.IsNotExist(err) {
 					rw.WriteHeader(404)
 					return
 				}
-				file := req.PathValue("file")
-				ff, err := lib.FastFileServer(fmt.Sprintf("%s\\%s", staticDir, file), "")
-				if err != nil {
-					if os.IsNotExist(err) {
-						rw.WriteHeader(404)
-						return
-					}
-					panic(err)
-				}
-				rw.Header().Add("Content-Type", ff.ContentType)
-				rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
-				rw.Write(ff.Content)
-			},
+				panic(err)
+			}
+			rw.Header().Add("Content-Type", ff.ContentType)
+			rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
+			rw.Write(ff.Content)
 		},
 	)
 }
