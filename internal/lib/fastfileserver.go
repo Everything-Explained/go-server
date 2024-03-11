@@ -76,14 +76,15 @@ type FastFile struct {
 var cache = make(map[string]*CachedFile)
 
 var mimeType = map[string]string{
-	".html": "text/html",
-	".json": "application/json",
-	".js":   "text/javascript",
-	".css":  "text/css",
-	".md":   "text/markdown",
-	".png":  "image/png",
-	".jpg":  "image/jpeg",
-	".jpeg": "image/jpeg",
+	".html":   "text/html",
+	".mdhtml": "text/html",
+	".json":   "application/json",
+	".js":     "text/javascript",
+	".css":    "text/css",
+	".md":     "text/markdown",
+	".png":    "image/png",
+	".jpg":    "image/jpeg",
+	".jpeg":   "image/jpeg",
 }
 
 const minMilliBeforeFastGet int64 = 120
