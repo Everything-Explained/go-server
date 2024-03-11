@@ -3,8 +3,10 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/Everything-Explained/go-server/internal/lib"
 	"github.com/Everything-Explained/go-server/internal/router/http_interface"
 	"github.com/Everything-Explained/go-server/internal/router/middleware"
 )
@@ -43,6 +45,51 @@ func (r *Router) Get(path string, handlers ...HTTPFunc) {
 	validatePath(path)
 	route := fmt.Sprintf("GET %s", path)
 	createHandler(route, handlers)
+}
+
+/*
+AddStaticRoute sets up a route handler with the specified path, to serve
+files from the specified folder, using FastFileServer.
+*/
+func (r *Router) AddStaticRoute(path string, folder string) {
+	validatePath(path)
+	staticDir := fmt.Sprintf("C:\\Server\\evex-production\\client\\%s", folder)
+	if _, err := os.Stat(staticDir); err != nil {
+		if strings.Contains(err.Error(), "cannot find") {
+			panic(fmt.Sprintf("static directory does not exist: %s", staticDir))
+		}
+		panic(err)
+	}
+
+	createHandler(
+		fmt.Sprintf("%s/{file}", path),
+		[]func(rw *http_interface.ResponseWriter, req *http.Request){
+			/*
+				  NOTE  404 errors do result in an attempted file load each time,
+				        which slows down the response. This could be solved
+						by utilizing a temporary cache. At this time, solving
+						the "problem" would be an overoptimization.
+			*/
+			func(rw *http_interface.ResponseWriter, req *http.Request) {
+				if !strings.Contains(req.URL.Path, ".") {
+					rw.WriteHeader(404)
+					return
+				}
+				file := req.PathValue("file")
+				ff, err := lib.FastFileServer(fmt.Sprintf("%s\\%s", staticDir, file), "")
+				if err != nil {
+					if os.IsNotExist(err) {
+						rw.WriteHeader(404)
+						return
+					}
+					panic(err)
+				}
+				rw.Header().Add("Content-Type", ff.ContentType)
+				rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
+				rw.Write(ff.Content)
+			},
+		},
+	)
 }
 
 func (r *Router) Post(path string, handlers ...HTTPFunc) {

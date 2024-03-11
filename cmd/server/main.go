@@ -19,7 +19,8 @@ func main() {
 		config.Mail.Host,
 	)
 	r := router.NewRouter()
-	// api_route.AddAPISetupRoute(r)
+	r.AddStaticRoute("/assets", "assets")
+	api_route.AddAPISetupRoute(r)
 	api_route.AddRed33mRoute(r)
 	r.Listen("127.0.0.1", config.Port)
 }
