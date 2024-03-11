@@ -11,6 +11,7 @@ type ConfigData struct {
 	Red33mPassword string `yaml:"red33m-password"`
 	SecurityHeader string `yaml:"security-header"`
 	Port           int
+	ClientPath     string   `yaml:"client-path"`
 	AllowedOrigins []string `yaml:"allowed-origins"`
 	Mail           struct {
 		Address    string
