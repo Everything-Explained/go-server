@@ -12,6 +12,7 @@ type ConfigData struct {
 	SecurityHeader string `yaml:"security-header"`
 	Port           int
 	ClientPath     string   `yaml:"client-path"`
+	DataPath       string   `yaml:"data-path"`
 	AllowedOrigins []string `yaml:"allowed-origins"`
 	Mail           struct {
 		Address    string
