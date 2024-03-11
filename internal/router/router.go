@@ -64,12 +64,7 @@ func (r *Router) AddStaticRoute(path string, folder string) {
 	createHandler(
 		fmt.Sprintf("%s/{file}", path),
 		[]func(rw *http_interface.ResponseWriter, req *http.Request){
-			/*
-				  NOTE  404 errors do result in an attempted file load each time,
-				        which slows down the response. This could be solved
-						by utilizing a temporary cache. At this time, solving
-						the "problem" would be an overoptimization.
-			*/
+			// NOTE  Maybe cache 404 requests in the future (micro-optimization)
 			func(rw *http_interface.ResponseWriter, req *http.Request) {
 				if !strings.Contains(req.URL.Path, ".") {
 					rw.WriteHeader(404)
