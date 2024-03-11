@@ -161,7 +161,6 @@ func createCachedFile(path string, lastModified string) (*FastFile, error) {
 	mu.Lock()
 	defer mu.Unlock()
 	if _, exists := cache[path]; !exists {
-		fmt.Println("creating cache")
 		fi, err := loadFileInfo(path, lastModified)
 		if err != nil {
 			return nil, err
