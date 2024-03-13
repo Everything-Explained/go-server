@@ -10,7 +10,6 @@ import (
 
 func AddAPISetupRoute(r *router.Router) {
 	r.AddGetGuard("/api/setup", apiGuardFunc, router.GuardData{
-		CanLog:  true,
 		Handler: setupRoute,
 	})
 }
@@ -26,8 +25,13 @@ func setupRoute(rw *http_interface.ResponseWriter, req *http.Request) {
 		red33mStatus = "yes"
 	}
 
-	rw.Header().Add("X-Evex-Token", token)
+	if !rw.GetBool("hasAuth") {
+		rw.Header().Add("X-Evex-Token", token)
+	}
 	rw.Header().Add("X-Evex-Red33m", red33mStatus)
-	// todo - send versions.json file
-	rw.WriteHeader(200)
+	versionFile := lib.GetConfig().DataPath + "/versions.json"
+	err := lib.FastFileServer.ServeNoCache(versionFile, rw, req)
+	if err != nil {
+		panic(err)
+	}
 }
