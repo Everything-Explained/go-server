@@ -68,17 +68,14 @@ func (r *Router) AddStaticRoute(path string, folder string) {
 				return
 			}
 			file := req.PathValue("file")
-			ff, err := lib.FastFileServer(fmt.Sprintf("%s\\%s", staticDir, file), "")
+			err := lib.FastFileServer.ServeMaxCache(
+				fmt.Sprintf("%s\\%s", staticDir, file),
+				rw,
+				req,
+			)
 			if err != nil {
-				if os.IsNotExist(err) {
-					rw.WriteHeader(404)
-					return
-				}
 				panic(err)
 			}
-			rw.Header().Add("Content-Type", ff.ContentType)
-			rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
-			rw.Write(ff.Content)
 		},
 	)
 }

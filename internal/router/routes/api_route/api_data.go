@@ -3,7 +3,6 @@ package api_route
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Everything-Explained/go-server/internal/lib"
@@ -11,10 +10,7 @@ import (
 	"github.com/Everything-Explained/go-server/internal/router/http_interface"
 )
 
-var (
-	dataPath string = lib.GetConfig().DataPath
-	maxAge   int    = 60 * 60 * 24 * 365 * 10 // 10 years
-)
+var dataPath string = lib.GetConfig().DataPath
 
 func AddAPIDataRoute(r *router.Router) {
 	r.AddGetGuard("/api/data/{content}/{visibility}", apiGuardFunc, router.GuardData{
@@ -43,7 +39,10 @@ func mdhtmlHandler(rw *http_interface.ResponseWriter, req *http.Request) {
 	}
 
 	filePath := fmt.Sprintf("%s/%s/%s/%s", dataPath, content, visibility, file)
-	useFastFileServer(filePath, rw)
+	err := lib.FastFileServer.ServeMaxCache(filePath, rw, req)
+	if err != nil {
+		panic(err)
+	}
 }
 
 /*
@@ -63,20 +62,8 @@ func dataPreviewHandler(rw *http_interface.ResponseWriter, req *http.Request) {
 	}
 
 	filePath := fmt.Sprintf("%s/%s/%s/%s.json", dataPath, content, visibility, visibility)
-	useFastFileServer(filePath, rw)
-}
-
-func useFastFileServer(filePath string, rw *http_interface.ResponseWriter) {
-	ff, err := lib.FastFileServer(filePath, "")
+	err := lib.FastFileServer.ServeMaxCache(filePath, rw, req)
 	if err != nil {
-		if os.IsNotExist(err) {
-			rw.WriteHeader(404)
-			return
-		}
 		panic(err)
 	}
-	rw.Header().Add("Content-Type", ff.ContentType)
-	rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
-	rw.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", maxAge))
-	rw.Write(ff.Content)
 }

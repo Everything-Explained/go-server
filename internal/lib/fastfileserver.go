@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -91,55 +92,89 @@ var mimeType = map[string]string{
 
 const (
 	minMilliBeforeFastGet int64 = 120
-	longMaxAge                  = 60 * 60 * 24 * 365 * 10
+	longMaxAge                  = 60 * 60 * 24 * 30 * 6
 )
 
 var mu sync.Mutex
 
-func ServeFastFileNoCache(
+type fastFileServer struct{}
+
+var FastFileServer = &fastFileServer{}
+
+/*
+ServeNoCache serves a file with all the appropriate headers, including
+a "Cache-Control" no-cache. A 304 response will be given if the file
+has not been modified since it was last retrieved, assuming the
+request contains the "If-Modified-Since" header.
+*/
+func (ffs fastFileServer) ServeNoCache(
 	filePath string,
 	rw *http_interface.ResponseWriter,
 	req *http.Request,
 ) error {
-	ff, err := FastFileServer(filePath, req.Header.Get("If-Modified-Since"))
+	ff, err := ffs.getFastFile(filePath, req.Header.Get("If-Modified-Since"))
 	if err != nil {
+		if os.IsNotExist(err) {
+			rw.WriteHeader(404)
+			// FIX  Log missing file
+			return nil
+		}
 		return err
 	}
 
-	rw.Header().Add("Date", utils.GetGMTFrom(time.Now()))
-	rw.Header().Add("Last-Modified", ff.LastModified)
+	headers := make(map[string]string, 5)
+	headers["Date"] = utils.GetGMTFrom(time.Now())
+	headers["Last-Modified"] = ff.LastModified
+
 	if ff.Length == 0 {
+		addHeaders(rw, headers)
 		rw.WriteHeader(304)
 		return nil
 	}
 
-	rw.Header().Add("Cache-Control", "public, no-cache")
-	rw.Header().Add("Content-Type", ff.ContentType)
-	rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
-	rw.Write(ff.Content)
-	return nil
-}
+	headers["Cache-Control"] = "public, no-cache"
+	headers["Content-Type"] = ff.ContentType
+	headers["Content-Length"] = fmt.Sprintf("%d", ff.Length)
+	addHeaders(rw, headers)
 
-func ServeFastFileMaxCache(
-	filePath string,
-	rw *http_interface.ResponseWriter,
-	req *http.Request,
-) error {
-	ff, err := FastFileServer(filePath, "")
-	if err != nil {
-		return err
-	}
-
-	rw.Header().Add("Date", utils.GetGMTFrom(time.Now()))
-	rw.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", longMaxAge))
-	rw.Header().Add("Content-Type", ff.ContentType)
-	rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
 	rw.Write(ff.Content)
 	return nil
 }
 
 /*
-FastFileServer tries to load a file from cache if the file is being requested
+ServeMaxCache serves a file with all the appropriate headers, including
+a "Cache-Control" max-age of longMaxAge (6 months as of this comment)
+
+🟡 This is for routes that have a cache-busting strategy on
+the client side, usually through query params.
+*/
+func (ffs fastFileServer) ServeMaxCache(
+	filePath string,
+	rw *http_interface.ResponseWriter,
+	req *http.Request,
+) error {
+	ff, err := ffs.getFastFile(filePath, "")
+	if err != nil {
+		if os.IsNotExist(err) {
+			rw.WriteHeader(404)
+			// FIX  Log missing file
+			return nil
+		}
+		return err
+	}
+
+	addHeaders(rw, map[string]string{
+		"Date":           utils.GetGMTFrom(time.Now()),
+		"Cache-Control":  fmt.Sprintf("public, max-age=%d", longMaxAge),
+		"Content-Type":   ff.ContentType,
+		"Content-Length": fmt.Sprintf("%d", ff.Length),
+	})
+	rw.Write(ff.Content)
+	return nil
+}
+
+/*
+Serve tries to load a file from cache if the file is being requested
 below a minimum speed threshold. Once it determines if the request is
 "fast", it caches the file to memory, using the path as a unique
 identifier. If the returned file has a length of 0, the file is
@@ -153,8 +188,10 @@ the "Last-Modified" header.
 respond to requests with a "Last-Modified" and "Cache-Control"
 header.
 */
-// FIX  Should throw custom error when not passed a file ("x.y")
-func FastFileServer(path string, ifModifiedSince string) (*FastFile, error) {
+func (ffs fastFileServer) getFastFile(path string, ifModifiedSince string) (*FastFile, error) {
+	if filepath.Ext(path) == "" {
+		return nil, errors.New("missing file extension; cannot serve directory")
+	}
 	cf, err := createCachedFile(path, ifModifiedSince)
 	if err != nil {
 		return nil, err
@@ -181,11 +218,11 @@ func FastFileServer(path string, ifModifiedSince string) (*FastFile, error) {
 
 	// If Not-Modified zero out content for 304
 	if isFastGet && cachedFile.lastModified == ifModifiedSince {
-		return getFastFile(cachedFile, true), nil
+		return createFastFile(cachedFile, true), nil
 	}
 
 	if isFastGet && cachedFile.length > 0 {
-		return getFastFile(cachedFile, false), nil
+		return createFastFile(cachedFile, false), nil
 	}
 
 	fi, err := loadFileInfo(path, ifModifiedSince)
@@ -201,7 +238,7 @@ func FastFileServer(path string, ifModifiedSince string) (*FastFile, error) {
 		cachedFile.Unlock()
 	}
 
-	ff := getFastFile(fi, false)
+	ff := createFastFile(fi, false)
 
 	// Update Cache
 	if isFastGet && cachedFile.length == 0 && ff.Length > 0 {
@@ -223,7 +260,7 @@ func createCachedFile(path string, lastModified string) (*FastFile, error) {
 		if err != nil {
 			return nil, err
 		}
-		ff := getFastFile(fi, false)
+		ff := createFastFile(fi, false)
 
 		cache[path] = &CachedFile{
 			contentType:  ff.ContentType,
@@ -237,7 +274,7 @@ func createCachedFile(path string, lastModified string) (*FastFile, error) {
 	return nil, nil
 }
 
-func getFastFile(fi FileInfoInterface, forceZeroLength bool) *FastFile {
+func createFastFile(fi FileInfoInterface, forceZeroLength bool) *FastFile {
 	var contentLen int
 	if !forceZeroLength {
 		contentLen = fi.GetLength()
@@ -266,7 +303,7 @@ func getContentType(ext string) string {
 	return fmt.Sprintf("text/plain; %s", charset)
 }
 
-// Returns a struct that either contains the file
+// loadFileInfo returns a struct that either contains the file
 // contents, or an empty byte slice to indicate that the
 // file has not been modified.
 func loadFileInfo(path string, lastModified string) (*FileInfo, error) {
@@ -294,4 +331,10 @@ func loadFileInfo(path string, lastModified string) (*FileInfo, error) {
 	}
 
 	return &FileInfo{lastModified: fileModStr, contentType: ct, content: content}, nil
+}
+
+func addHeaders(rw *http_interface.ResponseWriter, headers map[string]string) {
+	for k, v := range headers {
+		rw.Header().Add(k, v)
+	}
 }

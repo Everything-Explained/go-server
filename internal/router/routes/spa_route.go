@@ -1,10 +1,7 @@
 package routes
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Everything-Explained/go-server/internal/lib"
@@ -24,17 +21,9 @@ func AddSPARoute(r *router.Router) {
 			rw.WriteHeader(404)
 			return
 		}
-		ff, err := lib.FastFileServer(indexPath, "")
+		err := lib.FastFileServer.ServeNoCache(indexPath, rw, req)
 		if err != nil {
-			if os.IsNotExist(err) {
-				log.Fatal("missing index page")
-				rw.WriteHeader(500)
-				return
-			}
 			panic(err)
 		}
-		rw.Header().Add("Content-Type", ff.ContentType)
-		rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
-		rw.Write(ff.Content)
 	})
 }
