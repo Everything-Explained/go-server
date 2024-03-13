@@ -47,6 +47,28 @@ func (r *Router) Get(path string, handlers ...HTTPFunc) {
 	createHandler(route, handlers)
 }
 
+func (r *Router) Post(path string, handlers ...HTTPFunc) {
+	validatePath(path)
+	route := fmt.Sprintf("POST %s", path)
+	createHandler(route, handlers)
+}
+
+func (r *Router) Patch(path string, handlers ...HTTPFunc) {
+	validatePath(path)
+	route := fmt.Sprintf("PATCH %s", path)
+	createHandler(route, handlers)
+}
+
+func (r *Router) Delete(path string, handlers ...HTTPFunc) {
+	validatePath(path)
+	route := fmt.Sprintf("DELETE %s", path)
+	createHandler(route, handlers)
+}
+
+func (r *Router) Listen(addr string, port int) {
+	http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), nil)
+}
+
 /*
 AddStaticRoute sets up a route handler with the specified path, to serve
 files from the specified folder, using FastFileServer.
@@ -78,28 +100,6 @@ func (r *Router) AddStaticRoute(path string, folder string) {
 			}
 		},
 	)
-}
-
-func (r *Router) Post(path string, handlers ...HTTPFunc) {
-	validatePath(path)
-	route := fmt.Sprintf("POST %s", path)
-	createHandler(route, handlers)
-}
-
-func (r *Router) Patch(path string, handlers ...HTTPFunc) {
-	validatePath(path)
-	route := fmt.Sprintf("PATCH %s", path)
-	createHandler(route, handlers)
-}
-
-func (r *Router) Delete(path string, handlers ...HTTPFunc) {
-	validatePath(path)
-	route := fmt.Sprintf("DELETE %s", path)
-	createHandler(route, handlers)
-}
-
-func (r *Router) Listen(addr string, port int) {
-	http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), nil)
 }
 
 /*
