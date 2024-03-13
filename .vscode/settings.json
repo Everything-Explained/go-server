@@ -15,5 +15,13 @@
   "gopls": {
     "formatting.gofumpt": true
   },
-  "cSpell.words": ["Appender", "godotenv", "jaevor", "joho", "oklog"]
+  "cSpell.words": [
+    "Appender",
+    "godotenv",
+    "jaevor",
+    "joho",
+    "mdhtml",
+    "oklog",
+    "overoptimization"
+  ]
 }
