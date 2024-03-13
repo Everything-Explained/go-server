@@ -3,12 +3,14 @@ package lib
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/Everything-Explained/go-server/internal/router/http_interface"
 	"github.com/Everything-Explained/go-server/internal/utils"
 )
 
@@ -87,17 +89,73 @@ var mimeType = map[string]string{
 	".jpeg":   "image/jpeg",
 }
 
-const minMilliBeforeFastGet int64 = 120
+const (
+	minMilliBeforeFastGet int64 = 120
+	longMaxAge                  = 60 * 60 * 24 * 365 * 10
+)
 
 var mu sync.Mutex
 
-// FastFileServer tries to load a file from cache if the file is being requested
-// below a minimum speed threshold. Once it determines if the request is
-// "fast", it caches the file to memory, using the path as a unique
-// identifier. If the returned file has a length of 0, the file is
-// being actively cached on the client.
-func FastFileServer(path string, lastModified string) (*FastFile, error) {
-	cf, err := createCachedFile(path, lastModified)
+func ServeFastFileNoCache(
+	filePath string,
+	rw *http_interface.ResponseWriter,
+	req *http.Request,
+) error {
+	ff, err := FastFileServer(filePath, req.Header.Get("If-Modified-Since"))
+	if err != nil {
+		return err
+	}
+
+	rw.Header().Add("Date", utils.GetGMTFrom(time.Now()))
+	rw.Header().Add("Last-Modified", ff.LastModified)
+	if ff.Length == 0 {
+		rw.WriteHeader(304)
+		return nil
+	}
+
+	rw.Header().Add("Cache-Control", "public, no-cache")
+	rw.Header().Add("Content-Type", ff.ContentType)
+	rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
+	rw.Write(ff.Content)
+	return nil
+}
+
+func ServeFastFileMaxCache(
+	filePath string,
+	rw *http_interface.ResponseWriter,
+	req *http.Request,
+) error {
+	ff, err := FastFileServer(filePath, "")
+	if err != nil {
+		return err
+	}
+
+	rw.Header().Add("Date", utils.GetGMTFrom(time.Now()))
+	rw.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", longMaxAge))
+	rw.Header().Add("Content-Type", ff.ContentType)
+	rw.Header().Add("Content-Length", fmt.Sprintf("%d", ff.Length))
+	rw.Write(ff.Content)
+	return nil
+}
+
+/*
+FastFileServer tries to load a file from cache if the file is being requested
+below a minimum speed threshold. Once it determines if the request is
+"fast", it caches the file to memory, using the path as a unique
+identifier. If the returned file has a length of 0, the file is
+being actively cached on the client.
+
+📝 ifModifiedSince refers to the "If-Modified-Since" header which is
+included in an *http.Request, if responses from your server include
+the "Last-Modified" header.
+
+🟡 In order to use ifModifiedSince properly, your server needs to
+respond to requests with a "Last-Modified" and "Cache-Control"
+header.
+*/
+// FIX  Should throw custom error when not passed a file ("x.y")
+func FastFileServer(path string, ifModifiedSince string) (*FastFile, error) {
+	cf, err := createCachedFile(path, ifModifiedSince)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +180,7 @@ func FastFileServer(path string, lastModified string) (*FastFile, error) {
 	cachedFile.Unlock()
 
 	// If Not-Modified zero out content for 304
-	if isFastGet && cachedFile.lastModified == lastModified {
+	if isFastGet && cachedFile.lastModified == ifModifiedSince {
 		return getFastFile(cachedFile, true), nil
 	}
 
@@ -130,7 +188,7 @@ func FastFileServer(path string, lastModified string) (*FastFile, error) {
 		return getFastFile(cachedFile, false), nil
 	}
 
-	fi, err := loadFileInfo(path, lastModified)
+	fi, err := loadFileInfo(path, ifModifiedSince)
 	if err != nil {
 		return nil, err
 	}
