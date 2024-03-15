@@ -1,7 +1,6 @@
 package api_route
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -20,11 +19,11 @@ type apiGuardKey string
 var guardKey apiGuardKey = "api_guard"
 
 func GetAPIGuardData(rw *http_interface.ResponseWriter) apiGuardData {
-	if v := rw.GetContext().Value(guardKey); v == nil {
-		panic("missing 'api_guard' data")
-	} else {
-		return v.(apiGuardData)
+	v, err := http_interface.GetContextValue[apiGuardData](guardKey, rw)
+	if err != nil {
+		panic(err)
 	}
+	return v
 }
 
 func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string, int) {
@@ -41,10 +40,10 @@ func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string,
 	}
 
 	if isSettingUp && auth[0] == "Bearer setup" {
-		rw.SetContext(context.WithValue(rw.GetContext(), guardKey, apiGuardData{
+		rw.WithValue(guardKey, apiGuardData{
 			isRed33med: false,
 			hasAuth:    false,
-		}))
+		})
 		return "", 0
 	}
 
@@ -54,10 +53,10 @@ func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string,
 		return "invalid auth", 403
 	}
 
-	rw.SetContext(context.WithValue(rw.GetContext(), guardKey, apiGuardData{
+	rw.WithValue(guardKey, apiGuardData{
 		isRed33med: userState == 1,
 		hasAuth:    true,
 		token:      token,
-	}))
+	})
 	return "", 0
 }

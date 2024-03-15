@@ -2,6 +2,7 @@ package http_interface
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -13,12 +14,8 @@ type ResponseWriter struct {
 	body    string
 }
 
-func (rw *ResponseWriter) GetContext() context.Context {
-	return rw.context
-}
-
-func (rw *ResponseWriter) SetContext(ctx context.Context) {
-	rw.context = ctx
+func (rw *ResponseWriter) WithValue(key any, val any) {
+	rw.context = context.WithValue(rw.context, key, val)
 }
 
 func (rw *ResponseWriter) GetStatus() int {
@@ -48,6 +45,15 @@ func (rw *ResponseWriter) GetBody() string {
 func (rw *ResponseWriter) WriteHeader(status int) {
 	rw.status = status
 	rw.ResponseWriter.WriteHeader(status)
+}
+
+func GetContextValue[T any](key any, rw *ResponseWriter) (T, error) {
+	var zero T
+	if v := rw.context.Value(key); v == nil {
+		return zero, fmt.Errorf("cannot find '%s' context", key)
+	} else {
+		return v.(T), nil
+	}
 }
 
 func CreateResponseWriter(rw http.ResponseWriter, req *http.Request) *ResponseWriter {
