@@ -15,17 +15,18 @@ func AddAPISetupRoute(r *router.Router) {
 }
 
 func setupRoute(rw *http_interface.ResponseWriter, req *http.Request) {
-	token := rw.GetStr("token")
-	if !rw.GetBool("hasAuth") {
+	guardData := GetAPIGuardData(rw)
+	token := guardData.token
+	if !guardData.hasAuth {
 		token = lib.UserWriter.AddUser(false)
 	}
 
 	red33mStatus := "no"
-	if rw.GetBool("isRed33med") {
+	if guardData.isRed33med {
 		red33mStatus = "yes"
 	}
 
-	if !rw.GetBool("hasAuth") {
+	if !guardData.hasAuth {
 		rw.Header().Add("X-Evex-Token", token)
 	}
 	rw.Header().Add("X-Evex-Red33m", red33mStatus)

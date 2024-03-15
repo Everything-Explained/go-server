@@ -19,7 +19,8 @@ func AddRed33mRoute(r *router.Router) {
 }
 
 func red33mRoute(rw *http_interface.ResponseWriter, req *http.Request) {
-	if rw.GetBool("isRed33med") {
+	guardData := GetAPIGuardData(rw)
+	if guardData.isRed33med {
 		rw.WriteHeader(400)
 		fmt.Fprint(rw, "already logged in")
 		return

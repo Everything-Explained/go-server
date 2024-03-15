@@ -1,54 +1,37 @@
 package http_interface
 
 import (
+	"context"
 	"io"
 	"net/http"
 )
 
-const (
-	maxIntStoreSize  = 10
-	maxStrStoreSize  = 10
-	maxBoolStoreSize = 10
-)
-
 type ResponseWriter struct {
 	http.ResponseWriter
-	strStore  map[string]string
-	intStore  map[string]int64
-	boolStore map[string]bool
-	status    int
-	body      string
+	context context.Context
+	status  int
+	body    string
 }
 
-func (rw *ResponseWriter) StoreStr(id string, val string) string {
-	rw.strStore[id] = val
-	return val
+func (rw *ResponseWriter) GetContext() context.Context {
+	return rw.context
 }
 
-func (rw *ResponseWriter) StoreInt(id string, val int64) int64 {
-	rw.intStore[id] = val
-	return val
-}
-
-func (rw *ResponseWriter) StoreBool(id string, val bool) bool {
-	rw.boolStore[id] = val
-	return val
-}
-
-func (rw *ResponseWriter) GetInt(id string) int64 {
-	return rw.intStore[id]
-}
-
-func (rw *ResponseWriter) GetStr(id string) string {
-	return rw.strStore[id]
-}
-
-func (rw *ResponseWriter) GetBool(id string) bool {
-	return rw.boolStore[id]
+func (rw *ResponseWriter) SetContext(ctx context.Context) {
+	rw.context = ctx
 }
 
 func (rw *ResponseWriter) GetStatus() int {
 	return rw.status
+}
+
+func (rw *ResponseWriter) Write(b []byte) (int, error) {
+	i, err := rw.ResponseWriter.Write(b)
+	if err != nil {
+		return i, err
+	}
+	rw.status = 200
+	return i, nil
 }
 
 /*
@@ -75,9 +58,7 @@ func CreateResponseWriter(rw http.ResponseWriter, req *http.Request) *ResponseWr
 	}
 	return &ResponseWriter{
 		ResponseWriter: rw,
-		strStore:       make(map[string]string, maxStrStoreSize),
-		intStore:       make(map[string]int64, maxIntStoreSize),
-		boolStore:      make(map[string]bool, maxBoolStoreSize),
+		context:        context.Background(),
 		body:           string(body),
 	}
 }

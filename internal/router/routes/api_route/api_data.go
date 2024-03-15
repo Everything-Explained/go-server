@@ -14,6 +14,7 @@ var dataPath string = lib.GetConfig().DataPath
 
 func AddAPIDataRoute(r *router.Router) {
 	r.AddGetGuard("/api/data/{content}/{visibility}", apiGuardFunc, router.GuardData{
+		CanLog:  true,
 		Handler: dataPreviewHandler,
 	})
 	r.AddGetGuard("/api/data/{content}/{visibility}/{file}", apiGuardFunc, router.GuardData{
@@ -26,10 +27,11 @@ mdhtmlHandler handles loading our custom MDHTML files, which contain
 HTML built from markdown (hence the name).
 */
 func mdhtmlHandler(rw *http_interface.ResponseWriter, req *http.Request) {
+	guardData := GetAPIGuardData(rw)
 	content := req.PathValue("content")
 	visibility := req.PathValue("visibility")
 	file := req.PathValue("file")
-	notRed33med := strings.Contains(visibility, "red33m") && !rw.GetBool("isRed33med")
+	notRed33med := strings.Contains(visibility, "red33m") && !guardData.isRed33med
 
 	// Only supports MDHTML files; all other requests are abnormal
 	if !strings.HasSuffix(file, ".mdhtml") || notRed33med {
@@ -50,9 +52,10 @@ dataPreviewHandler loads the preview data for the available articles
 at the requested route.
 */
 func dataPreviewHandler(rw *http_interface.ResponseWriter, req *http.Request) {
+	guardData := GetAPIGuardData(rw)
 	content := req.PathValue("content")
 	visibility := req.PathValue("visibility")
-	notRed33med := strings.Contains(visibility, "red33m") && !rw.GetBool("isRed33med")
+	notRed33med := strings.Contains(visibility, "red33m") && !guardData.isRed33med
 
 	// Only supports non-file requests; all other requests are abnormal
 	if strings.Contains(visibility, ".") || notRed33med {

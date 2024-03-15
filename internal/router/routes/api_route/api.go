@@ -1,12 +1,30 @@
 package api_route
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/Everything-Explained/go-server/internal/lib"
 	"github.com/Everything-Explained/go-server/internal/router/http_interface"
 )
+
+type apiGuardData struct {
+	isRed33med bool
+	hasAuth    bool
+	token      string
+}
+
+type apiGuardKey string
+
+var guardKey apiGuardKey = "api_guard"
+
+func GetAPIGuardData(rw *http_interface.ResponseWriter) apiGuardData {
+	if v := rw.GetContext().Value(guardKey); v == nil {
+		panic("missing 'api_guard' data")
+	}
+	return rw.GetContext().Value(guardKey).(apiGuardData)
+}
 
 func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string, int) {
 	isSettingUp := req.URL.Path == "/api/setup"
@@ -22,8 +40,10 @@ func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string,
 	}
 
 	if isSettingUp && auth[0] == "Bearer setup" {
-		rw.StoreBool("isRed33med", false)
-		rw.StoreBool("hasAuth", false)
+		rw.SetContext(context.WithValue(rw.GetContext(), guardKey, apiGuardData{
+			isRed33med: false,
+			hasAuth:    false,
+		}))
 		return "", 0
 	}
 
@@ -33,8 +53,10 @@ func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string,
 		return "invalid auth", 403
 	}
 
-	rw.StoreBool("isRed33med", userState == 1)
-	rw.StoreBool("hasAuth", true)
-	rw.StoreStr("token", token)
+	rw.SetContext(context.WithValue(rw.GetContext(), guardKey, apiGuardData{
+		isRed33med: userState == 1,
+		hasAuth:    true,
+		token:      token,
+	}))
 	return "", 0
 }
