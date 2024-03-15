@@ -22,8 +22,9 @@ var guardKey apiGuardKey = "api_guard"
 func GetAPIGuardData(rw *http_interface.ResponseWriter) apiGuardData {
 	if v := rw.GetContext().Value(guardKey); v == nil {
 		panic("missing 'api_guard' data")
+	} else {
+		return v.(apiGuardData)
 	}
-	return rw.GetContext().Value(guardKey).(apiGuardData)
 }
 
 func apiGuardFunc(rw *http_interface.ResponseWriter, req *http.Request) (string, int) {
