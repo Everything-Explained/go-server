@@ -1,9 +1,8 @@
-package lib
+package configs
 
 import (
 	"os"
 
-	"github.com/Everything-Explained/go-server/internal"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,6 +23,7 @@ type ConfigData struct {
 	}
 }
 
+// IMPORTANT: Implement embedding config.yml files
 var config ConfigData = ConfigData{}
 
 func GetConfig() ConfigData {
@@ -31,7 +31,7 @@ func GetConfig() ConfigData {
 }
 
 func init() {
-	content, err := os.ReadFile(internal.GetEnv().ConfigFilePath)
+	content, err := os.ReadFile(GetEnv().ConfigFilePath)
 	if err != nil {
 		panic(err)
 	}

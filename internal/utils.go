@@ -1,16 +1,28 @@
-package utils
+package internal
 
 import (
 	"net/http"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/jaevor/go-nanoid"
 )
 
 var (
 	workingDir string
 	once       sync.Once
+	GetLongID  func() string
+	GetShortID func() string
 )
+
+func init() {
+	longIDFunc, _ := nanoid.Standard(16)
+	GetLongID = longIDFunc
+
+	shortIDFunc, _ := nanoid.Standard(8)
+	GetShortID = shortIDFunc
+}
 
 func GetWorkingDir() string {
 	once.Do(func() {

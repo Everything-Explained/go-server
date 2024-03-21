@@ -5,28 +5,21 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	"github.com/Everything-Explained/go-server/internal/lib"
-	"github.com/Everything-Explained/go-server/internal/router/http_interface"
-	"github.com/Everything-Explained/go-server/internal/router/middleware"
 )
 
 type (
-	HTTPFunc   = func(rw *http_interface.ResponseWriter, req *http.Request)
-	Middleware = []HTTPFunc
-
-	GuardFunc = func(rw *http_interface.ResponseWriter, req *http.Request) (string, int)
-	GuardData struct {
-		// Middleware that is executed before the handler
-		PreMiddleware []HTTPFunc
-		// Middleware that is executed after the handler
-		PostMiddleware []HTTPFunc
-		// Function responsible for main route functionality
-		Handler HTTPFunc
-		// Enable or disable logging (off by default)
-		CanLog bool
-	}
+	HandlerFunc = func(rw ResponseWriter, req *http.Request)
+	GuardFunc   = func(rw ResponseWriter, req *http.Request) (string, int)
 )
+
+type RouteData struct {
+	// Middleware that is executed before the handler
+	PreMiddleware []HandlerFunc
+	// Middleware that is executed after the handler
+	PostMiddleware []HandlerFunc
+	// Function responsible for main route functionality
+	Handler HandlerFunc
+}
 
 func NewRouter() *Router {
 	return &Router{}
@@ -34,72 +27,28 @@ func NewRouter() *Router {
 
 type Router struct{}
 
-// Get handles the GET method for the specified path and accepts
-// middlewares, including the main handler for this route. The
-// handlers are executed in the order they are declared.
-//
-// NOTE: Handlers execute one after the other; there is no way
-// to pause or stop the chain. If you need to guard (stop)
-// a route
-func (r *Router) Get(path string, handlers ...HTTPFunc) {
-	validatePath(path)
-	route := fmt.Sprintf("GET %s", path)
-	createHandler(route, handlers)
+/*
+Get handles the GET method for the specified path and accepts
+middlewares, including the main handler for this route. The
+handlers are executed in the order they are declared.
+
+🔴 Panics if there are no handlers provided.
+
+🟠 Handlers execute one after the other; there is no way
+to pause or stop the chain of their execution. Use a
+guard route if you need to protect a specific handler.
+*/
+func (r *Router) Get(path string, handlers ...HandlerFunc) {
+	createHandler(path, "GET", handlers)
 }
 
-func (r *Router) Post(path string, handlers ...HTTPFunc) {
-	validatePath(path)
-	route := fmt.Sprintf("POST %s", path)
-	createHandler(route, handlers)
-}
-
-func (r *Router) Patch(path string, handlers ...HTTPFunc) {
-	validatePath(path)
-	route := fmt.Sprintf("PATCH %s", path)
-	createHandler(route, handlers)
-}
-
-func (r *Router) Delete(path string, handlers ...HTTPFunc) {
-	validatePath(path)
-	route := fmt.Sprintf("DELETE %s", path)
-	createHandler(route, handlers)
+func (r *Router) Post(path string, handlers ...HandlerFunc) {
+	createHandler(path, "POST", handlers)
 }
 
 func (r *Router) Listen(addr string, port int) {
+	// TODO  Return error
 	http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), nil)
-}
-
-/*
-AddStaticRoute sets up a route handler with the specified path, to serve
-files from the specified folder, using FastFileServer.
-*/
-func (r *Router) AddStaticRoute(path string, folder string) {
-	staticDir := fmt.Sprintf("C:\\Server\\evex-production\\client\\%s", folder)
-	if _, err := os.Stat(staticDir); err != nil {
-		if strings.Contains(err.Error(), "cannot find") {
-			panic(fmt.Sprintf("static directory does not exist: %s", staticDir))
-		}
-		panic(err)
-	}
-	r.Get(
-		fmt.Sprintf("%s/{file}", path),
-		// NOTE  Maybe cache 404 requests in the future (micro-optimization)
-		func(rw *http_interface.ResponseWriter, req *http.Request) {
-			if !strings.Contains(req.URL.Path, ".") {
-				rw.WriteHeader(404)
-				return
-			}
-			file := req.PathValue("file")
-			err := lib.FastFileServer.ServeMaxCache(
-				fmt.Sprintf("%s\\%s", staticDir, file),
-				rw,
-				req,
-			)
-			if err != nil {
-				panic(err)
-			}
-		},
-	)
 }
 
 /*
@@ -113,62 +62,94 @@ middleware has been included, behind the flag: GuardData.CanLog
 
 🔴 Panics if no handler is provided in GuardData
 */
-func (r *Router) AddGetGuard(path string, guard GuardFunc, gd GuardData) {
-	validatePath(path)
-	pattern := fmt.Sprintf("GET %s", path)
-	createGuardHandler(pattern, guard, gd)
+func (r *Router) AddGetGuard(path string, guard GuardFunc, rd RouteData) {
+	createGuardHandler(path, "GET", guard, rd)
 }
 
-func (r *Router) AddPostGuard(path string, guard GuardFunc, data GuardData) {
-	validatePath(path)
-	pattern := fmt.Sprintf("POST %s", path)
-	createGuardHandler(pattern, guard, data)
+func (r *Router) AddPostGuard(path string, guard GuardFunc, data RouteData) {
+	createGuardHandler(path, "POST", guard, data)
 }
 
-func (r *Router) AddPatchGuard(path string, guard GuardFunc, data GuardData) {
-	validatePath(path)
-	pattern := fmt.Sprintf("PATCH %s", path)
-	createGuardHandler(pattern, guard, data)
-}
+/*
+AddStaticRoute serves files from the specified folder path.
 
-func (r *Router) AddDeleteGuard(path string, guard GuardFunc, data GuardData) {
-	validatePath(path)
-	pattern := fmt.Sprintf("DELETE %s", path)
-	createGuardHandler(pattern, guard, data)
-}
+📝 Pre/Post Middleware is always executed, even if the file is
+404 not found.
 
-func createHandler(route string, mw Middleware) {
-	if len(mw) == 0 {
-		panic("route needs at least one handler function")
+🟡 Does NOT serve files from sub-folders.
+*/
+func (r *Router) AddStaticRoute(route string, folderPath string, rd RouteData) {
+	if rd.Handler != nil {
+		panic("static route ignores handler; use middleware only")
 	}
-	http.HandleFunc(route, func(rw http.ResponseWriter, req *http.Request) {
-		customResWriter := http_interface.CreateResponseWriter(rw, req)
-		for _, f := range mw {
-			f(customResWriter, req)
+
+	if strings.Contains(folderPath, ".") {
+		panic(
+			fmt.Sprintf("you provided a file path '%s' instead of a folder path.", folderPath),
+		)
+	}
+
+	if _, err := os.Stat(folderPath); err != nil {
+		if os.IsNotExist(err) {
+			panic(fmt.Sprintf("static directory does not exist: %s", folderPath))
+		}
+		panic(err)
+	}
+
+	r.Get(fmt.Sprintf("%s/{file}", route), func(rw ResponseWriter, req *http.Request) {
+		execHandlers(rw, req, rd.PreMiddleware...)
+		defer execHandlers(rw, req, rd.PostMiddleware...)
+
+		if !strings.Contains(req.URL.Path, ".") {
+			rw.WriteHeader(404)
+			return
+		}
+
+		file := req.PathValue("file")
+		err := FileServer.ServeMaxCache(
+			folderPath+"/"+file,
+			rw,
+			req,
+		)
+		if err != nil {
+			// TODO  Log error
+			panic(err)
 		}
 	})
 }
 
-func validatePath(path string) {
+func createHandler(path string, method string, handlers []HandlerFunc) {
 	if !strings.HasPrefix(path, "/") {
-		panic("invalid path, all paths should start with a '/'")
+		panic("invalid path, all paths should start with a: /")
 	}
+
+	if len(handlers) == 0 {
+		panic("route needs at least one handler function")
+	}
+
+	route := fmt.Sprintf("%s %s", method, path)
+	http.HandleFunc(route, func(rw http.ResponseWriter, req *http.Request) {
+		execHandlers(NewResponseWriter(rw, req), req, handlers...)
+	})
 }
 
-func createGuardHandler(pattern string, guard GuardFunc, gd GuardData) {
+func createGuardHandler(path string, method string, guard GuardFunc, gd RouteData) {
+	if !strings.HasPrefix(path, "/") {
+		panic("invalid path, all paths should start with a: /")
+	}
+
 	if gd.Handler == nil {
 		panic("the default handler for a route guard cannot be nil")
 	}
 
+	pattern := fmt.Sprintf("%s %s", method, path)
 	http.Handle(pattern, http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		customResWriter := http_interface.CreateResponseWriter(rw, req)
+		customResWriter := NewResponseWriter(rw, req)
 
-		if gd.CanLog {
-			middleware.LogHandler.IncomingReq(customResWriter, req)
-			defer func() {
-				middleware.LogHandler.OutgoingResp(customResWriter, req)
-			}()
-		}
+		execHandlers(customResWriter, req, gd.PreMiddleware...)
+		defer func() {
+			execHandlers(customResWriter, req, gd.PostMiddleware...)
+		}()
 
 		msg, status := guard(customResWriter, req)
 		if status >= 400 {
@@ -177,18 +158,14 @@ func createGuardHandler(pattern string, guard GuardFunc, gd GuardData) {
 			return
 		}
 
-		if len(gd.PreMiddleware) > 0 {
-			for _, f := range gd.PreMiddleware {
-				f(customResWriter, req)
-			}
-		}
-
 		gd.Handler(customResWriter, req)
-
-		if len(gd.PostMiddleware) > 0 {
-			for _, f := range gd.PostMiddleware {
-				f(customResWriter, req)
-			}
-		}
 	}))
+}
+
+func execHandlers(rw ResponseWriter, req *http.Request, handlers ...HandlerFunc) {
+	if len(handlers) > 0 {
+		for _, f := range handlers {
+			f(rw, req)
+		}
+	}
 }

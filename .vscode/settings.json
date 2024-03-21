@@ -1,20 +1,4 @@
 {
-  "[go]": {
-    "editor.insertSpaces": false,
-    "editor.parameterHints.enabled": true,
-    "togglequotes.chars": ["\"", "'", "`"],
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "always",
-      "source.fixAll": "always"
-    },
-    "editor.defaultFormatter": "golang.go",
-    "editor.tabSize": 4
-  },
-  "go.formatTool": "goimports",
-  "gopls": {
-    "formatting.gofumpt": true
-  },
   "cSpell.words": [
     "Appender",
     "godotenv",

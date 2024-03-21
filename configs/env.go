@@ -1,9 +1,9 @@
-package internal
+package configs
 
 import (
 	"os"
 
-	"github.com/Everything-Explained/go-server/internal/utils"
+	"github.com/Everything-Explained/go-server/internal"
 	"github.com/joho/godotenv"
 )
 
@@ -16,15 +16,16 @@ type environment struct {
 
 func GetEnv() environment {
 	if env.ConfigFilePath == "" {
-		if err := godotenv.Load(utils.GetWorkingDir() + "\\.env.dev"); err != nil {
-			if err = godotenv.Load(utils.GetWorkingDir() + "\\.env.prod"); err != nil {
+		wd := internal.GetWorkingDir()
+		if err := godotenv.Load(wd + "/configs/.env.dev"); err != nil {
+			if err = godotenv.Load(wd + "/configs/.env.prod"); err != nil {
 				panic(err)
 			}
 		}
 
 		env = environment{
 			InDev:          os.Getenv("ENV") == "dev",
-			ConfigFilePath: utils.GetWorkingDir() + "\\" + os.Getenv("CONFIG_FILE"),
+			ConfigFilePath: wd + "/configs/" + os.Getenv("CONFIG_FILE"),
 		}
 	}
 	return env
