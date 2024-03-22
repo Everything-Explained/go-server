@@ -10,7 +10,7 @@ import (
 )
 
 func HandleSetup(r *router.Router) {
-	ag := guards.GetAuthGuard(guards.AuthWithSetupRoute("/setup"))
+	ag := guards.GetAuthGuard()
 	r.AddGetGuard("/setup", ag.Handler, router.RouteData{
 		Handler: getSetupRoute(ag),
 	})
@@ -18,21 +18,21 @@ func HandleSetup(r *router.Router) {
 
 func getSetupRoute(ag guards.AuthGuard) router.HandlerFunc {
 	return func(rw router.ResponseWriter, req *http.Request) {
-		ctx, err := ag.GetContextValue(rw)
+		ctxVal, err := ag.GetContextValue(rw)
 		if err != nil {
 			panic(err)
 		}
-		token := ctx.Token
-		if !ctx.HasAuth {
+		token := ctxVal.Token
+		if !ctxVal.HasAuth {
 			token = writers.UserWriter.AddUser(false)
 		}
 
 		red33mStatus := "no"
-		if ctx.IsRed33med {
+		if ctxVal.IsRed33med {
 			red33mStatus = "yes"
 		}
 
-		if !ctx.HasAuth {
+		if !ctxVal.HasAuth {
 			rw.Header().Add("X-Evex-Token", token)
 		}
 		rw.Header().Add("X-Evex-Red33m", red33mStatus)

@@ -8,48 +8,39 @@ import (
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
-type authGuardData struct {
-	IsRed33med bool
-	HasAuth    bool
-	Token      string
-}
-
 type AuthGuard struct {
 	Handler         func(rw router.ResponseWriter, req *http.Request) (string, int)
 	GetContextValue func(rw router.ResponseWriter) (authGuardData, error)
 }
 
-type AuthGuardConfig struct {
-	setupRoute string
-}
+/*
+GetAuthGuard returns an authorization-guard middleware, that limits
+resource access to authorized users only.
 
-type AuthGuardOption func(*AuthGuardConfig)
-
-func AuthWithSetupRoute(route string) AuthGuardOption {
-	return func(cfg *AuthGuardConfig) {
-		cfg.setupRoute = route
-	}
-}
-
-func GetAuthGuard(options ...AuthGuardOption) AuthGuard {
+📝 Users are authorized through the '/setup' route, which is
+white-listed when containing the 'Bearer setup' Authorization
+header.
+*/
+func GetAuthGuard() AuthGuard {
 	authGuardContextKey := &router.ContextKey{Name: "auth"}
-	cfg := &AuthGuardConfig{}
-
-	for _, o := range options {
-		o(cfg)
-	}
 
 	return AuthGuard{
-		Handler: setupAuthGuard(authGuardContextKey, cfg.setupRoute),
+		Handler: setupAuthGuard(authGuardContextKey),
 		GetContextValue: func(rw router.ResponseWriter) (authGuardData, error) {
 			return router.GetContextValue[authGuardData](authGuardContextKey, rw)
 		},
 	}
 }
 
-func setupAuthGuard(ctxKey *router.ContextKey, setupRoute string) router.GuardFunc {
+type authGuardData struct {
+	IsRed33med bool
+	HasAuth    bool
+	Token      string
+}
+
+func setupAuthGuard(ctxKey *router.ContextKey) router.GuardFunc {
 	return func(rw router.ResponseWriter, req *http.Request) (string, int) {
-		isSettingUp := req.URL.Path == setupRoute
+		isSettingUp := req.URL.Path == "/setup"
 		uw := writers.UserWriter
 		_ = uw
 		authHeadArray := req.Header["Authorization"]
@@ -75,7 +66,7 @@ func setupAuthGuard(ctxKey *router.ContextKey, setupRoute string) router.GuardFu
 		token := strings.Split(authHead, " ")[1]
 		userState, err := uw.GetUserState(token)
 		if err != nil {
-			return "invalid auth", 403
+			return "suspicious activity detected", 403
 		}
 
 		rw.WithValue(ctxKey, authGuardData{
