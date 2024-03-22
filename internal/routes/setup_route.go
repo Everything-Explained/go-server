@@ -22,9 +22,9 @@ func getSetupRoute(ag guards.AuthGuard) router.HandlerFunc {
 		if err != nil {
 			panic(err)
 		}
-		token := ctxVal.Token
+		id := ctxVal.Id
 		if !ctxVal.HasAuth {
-			token = writers.UserWriter.AddUser(false)
+			id = writers.UserWriter.AddUser(false)
 		}
 
 		red33mStatus := "no"
@@ -33,7 +33,7 @@ func getSetupRoute(ag guards.AuthGuard) router.HandlerFunc {
 		}
 
 		if !ctxVal.HasAuth {
-			rw.Header().Add("X-Evex-Token", token)
+			rw.Header().Add("X-Evex-Id", id)
 		}
 		rw.Header().Add("X-Evex-Red33m", red33mStatus)
 		versionFile := configs.GetConfig().DataPath + "/versions.json"

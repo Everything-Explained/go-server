@@ -35,7 +35,7 @@ func GetAuthGuard() AuthGuard {
 type authGuardData struct {
 	IsRed33med bool
 	HasAuth    bool
-	Token      string
+	Id         string
 }
 
 func setupAuthGuard(ctxKey *router.ContextKey) router.GuardFunc {
@@ -63,8 +63,8 @@ func setupAuthGuard(ctxKey *router.ContextKey) router.GuardFunc {
 			return "", 0
 		}
 
-		token := strings.Split(authHead, " ")[1]
-		userState, err := uw.GetUserState(token)
+		id := strings.Split(authHead, " ")[1]
+		userState, err := uw.GetUserState(id)
 		if err != nil {
 			return "suspicious activity detected", 403
 		}
@@ -72,7 +72,7 @@ func setupAuthGuard(ctxKey *router.ContextKey) router.GuardFunc {
 		rw.WithValue(ctxKey, authGuardData{
 			IsRed33med: userState == 1,
 			HasAuth:    true,
-			Token:      token,
+			Id:         id,
 		})
 
 		return "", 0

@@ -56,6 +56,6 @@ func getRed33mRoute(ag guards.AuthGuard) router.HandlerFunc {
 			return
 		}
 
-		writers.UserWriter.UpdateUser(ctxVal.Token, true)
+		writers.UserWriter.UpdateUser(ctxVal.Id, true)
 	}
 }
