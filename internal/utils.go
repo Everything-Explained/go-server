@@ -17,7 +17,7 @@ var (
 )
 
 func init() {
-	longIDFunc, _ := nanoid.Standard(16)
+	longIDFunc, _ := nanoid.Standard(24)
 	GetLongID = longIDFunc
 
 	shortIDFunc, _ := nanoid.Standard(8)
