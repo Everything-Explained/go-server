@@ -12,11 +12,11 @@ import (
 
 func HandleData(r *router.Router) {
 	ag := guards.GetAuthGuard()
-	r.AddGetGuard("/data/{content}/{visibility}", ag.Handler, router.RouteData{
-		Handler: getDataSummaryHandler(ag),
+	r.GetWithGuard("/data/{content}/{visibility}", ag.HandlerFunc, router.RouteData{
+		HandlerFunc: getDataSummaryHandler(ag),
 	})
-	r.AddGetGuard("/data/{content}/{visibility}/{file}", ag.Handler, router.RouteData{
-		Handler: getMDHTMLHandler(ag),
+	r.GetWithGuard("/data/{content}/{visibility}/{file}", ag.HandlerFunc, router.RouteData{
+		HandlerFunc: getMDHTMLHandler(ag),
 	})
 }
 

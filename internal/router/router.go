@@ -18,7 +18,7 @@ type RouteData struct {
 	// Middleware that is executed after the handler
 	PostMiddleware []HandlerFunc
 	// Function responsible for main route functionality
-	Handler HandlerFunc
+	HandlerFunc HandlerFunc
 }
 
 func NewRouter() *Router {
@@ -52,7 +52,7 @@ func (r *Router) Listen(addr string, port int) {
 }
 
 /*
-AddGetGuard guards the specified path string with a function that returns
+GetWithGuard guards the specified path string with a function that returns
 a message and HTTP status code. A code >= to 400 results in the message
 and status code being written to the response, skipping handler and
 all middleware execution.
@@ -62,24 +62,24 @@ middleware has been included, behind the flag: GuardData.CanLog
 
 🔴 Panics if no handler is provided in GuardData
 */
-func (r *Router) AddGetGuard(path string, guard GuardFunc, rd RouteData) {
+func (r *Router) GetWithGuard(path string, guard GuardFunc, rd RouteData) {
 	createGuardHandler(path, "GET", guard, rd)
 }
 
-func (r *Router) AddPostGuard(path string, guard GuardFunc, data RouteData) {
+func (r *Router) PostWithGuard(path string, guard GuardFunc, data RouteData) {
 	createGuardHandler(path, "POST", guard, data)
 }
 
 /*
-AddStaticRoute serves files from the specified folder path.
+GetStatic serves files from the specified folder path.
 
 📝 Pre/Post Middleware is always executed, even if the file is
 404 not found.
 
 🟡 Does NOT serve files from sub-folders.
 */
-func (r *Router) AddStaticRoute(route string, folderPath string, rd RouteData) {
-	if rd.Handler != nil {
+func (r *Router) GetStatic(route string, folderPath string, rd RouteData) {
+	if rd.HandlerFunc != nil {
 		panic("static route ignores handler; use middleware only")
 	}
 
@@ -138,7 +138,7 @@ func createGuardHandler(path string, method string, guard GuardFunc, gd RouteDat
 		panic("invalid path, all paths should start with a: /")
 	}
 
-	if gd.Handler == nil {
+	if gd.HandlerFunc == nil {
 		panic("the default handler for a route guard cannot be nil")
 	}
 
@@ -158,7 +158,7 @@ func createGuardHandler(path string, method string, guard GuardFunc, gd RouteDat
 			return
 		}
 
-		gd.Handler(customResWriter, req)
+		gd.HandlerFunc(customResWriter, req)
 	}))
 }
 

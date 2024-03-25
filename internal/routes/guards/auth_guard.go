@@ -9,7 +9,7 @@ import (
 )
 
 type AuthGuard struct {
-	Handler         func(rw router.ResponseWriter, req *http.Request) (string, int)
+	HandlerFunc     func(rw router.ResponseWriter, req *http.Request) (string, int)
 	GetContextValue func(rw router.ResponseWriter) (authGuardData, error)
 }
 
@@ -25,7 +25,7 @@ func GetAuthGuard() AuthGuard {
 	authGuardContextKey := &router.ContextKey{Name: "auth"}
 
 	return AuthGuard{
-		Handler: setupAuthGuard(authGuardContextKey),
+		HandlerFunc: setupAuthGuard(authGuardContextKey),
 		GetContextValue: func(rw router.ResponseWriter) (authGuardData, error) {
 			return router.GetContextValue[authGuardData](authGuardContextKey, rw)
 		},

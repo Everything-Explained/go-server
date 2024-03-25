@@ -11,8 +11,8 @@ import (
 
 func HandleSetup(r *router.Router) {
 	ag := guards.GetAuthGuard()
-	r.AddGetGuard("/setup", ag.Handler, router.RouteData{
-		Handler: getSetupRoute(ag),
+	r.GetWithGuard("/setup", ag.HandlerFunc, router.RouteData{
+		HandlerFunc: getSetupRoute(ag),
 	})
 }
 

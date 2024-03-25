@@ -15,14 +15,14 @@ import (
 func HandleRed33m(r *router.Router) {
 	ag := guards.GetAuthGuard()
 
-	r.AddPostGuard("/red33m", ag.Handler, router.RouteData{
+	r.PostWithGuard("/red33m", ag.HandlerFunc, router.RouteData{
 		// PreMiddleware: []router.HandlerFunc{
 		// 	middleware.LogHandler.IncomingReq,
 		// },
 		// PostMiddleware: []router.HandlerFunc{
 		// 	middleware.LogHandler.OutgoingResp,
 		// },
-		Handler: getRed33mRoute(ag),
+		HandlerFunc: getRed33mRoute(ag),
 	})
 }
 
