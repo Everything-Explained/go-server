@@ -1,88 +1,60 @@
 package router
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/Everything-Explained/go-server/internal"
 )
 
-type (
-	HandlerFunc = func(rw ResponseWriter, req *http.Request)
-	GuardFunc   = func(rw ResponseWriter, req *http.Request) (string, int)
+type Method string
+
+const (
+	GET    Method = "GET"
+	POST   Method = "POST"
+	PUT    Method = "PUT"
+	PATCH  Method = "PATCH"
+	DELETE Method = "DELETE"
 )
 
-type RouteData struct {
-	// Middleware that is executed before the handler
-	PreMiddleware []HandlerFunc
-	// Middleware that is executed after the handler
-	PostMiddleware []HandlerFunc
-	// Function responsible for main route functionality
-	HandlerFunc HandlerFunc
-}
+var ReqBodyKey = &internal.ContextKey{Name: "body"}
 
 func NewRouter() *Router {
-	return &Router{}
-}
-
-type Router struct{}
-
-/*
-Get handles the GET method for the specified path and accepts
-middlewares, including the main handler for this route. The
-handlers are executed in the order they are declared.
-
-🔴 Panics if there are no handlers provided.
-
-🟠 Handlers execute one after the other; there is no way
-to pause or stop the chain of their execution. Use a
-guard route if you need to protect a specific handler.
-*/
-func (r *Router) Get(path string, handlers ...HandlerFunc) {
-	createHandler(path, "GET", handlers)
-}
-
-func (r *Router) Post(path string, handlers ...HandlerFunc) {
-	createHandler(path, "POST", handlers)
-}
-
-func (r *Router) Listen(addr string, port int) {
-	// TODO  Return error
-	http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), nil)
-}
-
-/*
-GetWithGuard guards the specified path string with a function that returns
-a message and HTTP status code. A code >= to 400 results in the message
-and status code being written to the response, skipping handler and
-all middleware execution.
-
-📝 Because middleware cannot be executed before the guard, the logging
-middleware has been included, behind the flag: GuardData.CanLog
-
-🔴 Panics if no handler is provided in GuardData
-*/
-func (r *Router) GetWithGuard(path string, guard GuardFunc, rd RouteData) {
-	createGuardHandler(path, "GET", guard, rd)
-}
-
-func (r *Router) PostWithGuard(path string, guard GuardFunc, data RouteData) {
-	createGuardHandler(path, "POST", guard, data)
-}
-
-/*
-GetStatic serves files from the specified folder path.
-
-📝 Pre/Post Middleware is always executed, even if the file is
-404 not found.
-
-🟡 Does NOT serve files from sub-folders.
-*/
-func (r *Router) GetStatic(route string, folderPath string, rd RouteData) {
-	if rd.HandlerFunc != nil {
-		panic("static route ignores handler; use middleware only")
+	sx := http.NewServeMux()
+	return &Router{
+		Handler: sx,
 	}
+}
 
+type Router struct {
+	Handler *http.ServeMux
+}
+
+func GetContextValue[T any](key any, r *http.Request) (T, error) {
+	v, ok := r.Context().Value(key).(T)
+	if !ok {
+		return v, fmt.Errorf("could not find context key: %v", key)
+	}
+	return v, nil
+}
+
+func (r *Router) Get(route string, handler http.HandlerFunc, mw ...Middleware) {
+	r.createHandler(route, GET, handler, mw...)
+}
+
+func (r *Router) Post(route string, handler http.HandlerFunc, mw ...Middleware) {
+	r.createHandler(route, POST, handler, mw...)
+}
+
+func (r *Router) GetStatic(
+	route string,
+	folderPath string,
+	mw ...Middleware,
+) {
 	if strings.Contains(folderPath, ".") {
 		panic(
 			fmt.Sprintf("you provided a file path '%s' instead of a folder path.", folderPath),
@@ -96,10 +68,7 @@ func (r *Router) GetStatic(route string, folderPath string, rd RouteData) {
 		panic(err)
 	}
 
-	r.Get(fmt.Sprintf("%s/{file}", route), func(rw ResponseWriter, req *http.Request) {
-		execHandlers(rw, req, rd.PreMiddleware...)
-		defer execHandlers(rw, req, rd.PostMiddleware...)
-
+	r.Get(fmt.Sprintf("%s/{file}", route), func(rw http.ResponseWriter, req *http.Request) {
 		if !strings.Contains(req.URL.Path, ".") {
 			rw.WriteHeader(404)
 			return
@@ -115,57 +84,59 @@ func (r *Router) GetStatic(route string, folderPath string, rd RouteData) {
 			// TODO  Log error
 			panic(err)
 		}
-	})
+	}, mw...)
 }
 
-func createHandler(path string, method string, handlers []HandlerFunc) {
+func GetBody(r *http.Request) string {
+	body, ok := r.Context().Value(ReqBodyKey).(string)
+	if !ok {
+		panic("missing body context")
+	}
+	return body
+}
+
+func (r *Router) createHandler(
+	path string,
+	m Method,
+	handler http.HandlerFunc,
+	mw ...Middleware,
+) {
 	if !strings.HasPrefix(path, "/") {
 		panic("invalid path, all paths should start with a: /")
 	}
 
-	if len(handlers) == 0 {
-		panic("route needs at least one handler function")
+	var chain Middleware
+	if len(mw) > 0 {
+		chain = CreateMiddlewareChain(mw...)
 	}
 
-	route := fmt.Sprintf("%s %s", method, path)
-	http.HandleFunc(route, func(rw http.ResponseWriter, req *http.Request) {
-		execHandlers(NewResponseWriter(rw, req), req, handlers...)
-	})
-}
+	route := fmt.Sprintf("%s %s", m, path)
 
-func createGuardHandler(path string, method string, guard GuardFunc, gd RouteData) {
-	if !strings.HasPrefix(path, "/") {
-		panic("invalid path, all paths should start with a: /")
+	if chain != nil {
+		r.Handler.Handle(route, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			reqWithBody := r.WithContext(
+				context.WithValue(r.Context(), ReqBodyKey, readBody(r)),
+			)
+			chain(handler).ServeHTTP(w, reqWithBody)
+		}))
+		return
 	}
 
-	if gd.HandlerFunc == nil {
-		panic("the default handler for a route guard cannot be nil")
-	}
-
-	pattern := fmt.Sprintf("%s %s", method, path)
-	http.Handle(pattern, http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		customResWriter := NewResponseWriter(rw, req)
-
-		execHandlers(customResWriter, req, gd.PreMiddleware...)
-		defer func() {
-			execHandlers(customResWriter, req, gd.PostMiddleware...)
-		}()
-
-		msg, status := guard(customResWriter, req)
-		if status >= 400 {
-			customResWriter.WriteHeader(status)
-			fmt.Fprint(customResWriter, msg)
-			return
-		}
-
-		gd.HandlerFunc(customResWriter, req)
+	r.Handler.Handle(route, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqWithBody := r.WithContext(context.WithValue(r.Context(), ReqBodyKey, readBody(r)))
+		handler.ServeHTTP(w, reqWithBody)
 	}))
 }
 
-func execHandlers(rw ResponseWriter, req *http.Request, handlers ...HandlerFunc) {
-	if len(handlers) > 0 {
-		for _, f := range handlers {
-			f(rw, req)
-		}
+func readBody(r *http.Request) string {
+	if r.Body == nil {
+		return ""
 	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(string(body))
 }

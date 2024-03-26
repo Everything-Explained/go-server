@@ -3,59 +3,41 @@ package routes
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/Everything-Explained/go-server/configs"
+	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
-	"github.com/Everything-Explained/go-server/internal/routes/guards"
 	"github.com/Everything-Explained/go-server/internal/writers"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func HandleRed33m(r *router.Router) {
-	ag := guards.GetAuthGuard()
+	r.Post("/red33m", func(w http.ResponseWriter, r *http.Request) {
+		agData := middleware.GetAuthGuardData(r)
 
-	r.PostWithGuard("/red33m", ag.HandlerFunc, router.RouteData{
-		// PreMiddleware: []router.HandlerFunc{
-		// 	middleware.LogHandler.IncomingReq,
-		// },
-		// PostMiddleware: []router.HandlerFunc{
-		// 	middleware.LogHandler.OutgoingResp,
-		// },
-		HandlerFunc: getRed33mRoute(ag),
-	})
-}
-
-func getRed33mRoute(ag guards.AuthGuard) router.HandlerFunc {
-	return func(rw router.ResponseWriter, req *http.Request) {
-		ctxVal, err := ag.GetContextValue(rw)
-		if err != nil {
-			panic(err)
-		}
-
-		if ctxVal.IsRed33med {
-			rw.WriteHeader(400)
-			fmt.Fprintf(rw, "already logged in")
+		if agData.IsRed33med {
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "already logged in")
 			return
 		}
 
-		body := strings.TrimSpace(rw.GetBody())
+		body := router.GetBody(r)
 		if body == "" {
-			rw.WriteHeader(400)
-			fmt.Fprintf(rw, "missing body")
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "missing body")
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword(
+		err := bcrypt.CompareHashAndPassword(
 			[]byte(configs.GetConfig().Red33mPassword),
 			[]byte(body),
 		)
 		if err != nil {
-			rw.WriteHeader(401)
-			fmt.Fprintf(rw, "invalid password")
+			w.WriteHeader(401)
+			fmt.Fprintf(w, "invalid password")
 			return
 		}
 
-		writers.UserWriter.UpdateUser(ctxVal.Id, true)
-	}
+		writers.UserWriter.UpdateUser(agData.Id, true)
+	}, middleware.AuthGuard)
 }

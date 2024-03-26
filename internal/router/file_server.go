@@ -57,7 +57,7 @@ request contains the "If-Modified-Since" header.
 */
 func (ffs fileServer) ServeNoCache(
 	filePath string,
-	rw ResponseWriter,
+	rw http.ResponseWriter,
 	req *http.Request,
 ) error {
 	ff, err := ffs.getFastFile(filePath, req.Header.Get("If-Modified-Since"))
@@ -102,7 +102,7 @@ the client side, usually through query params.
 */
 func (ffs fileServer) ServeMaxCache(
 	filePath string,
-	rw ResponseWriter,
+	rw http.ResponseWriter,
 	req *http.Request,
 ) error {
 	ff, err := ffs.getFastFile(filePath, "")
@@ -299,7 +299,7 @@ func loadFileInfo(filePath string, ifModSince string) (*fastFileInfo, error) {
 	return fi, nil
 }
 
-func addHeaders(rw ResponseWriter, headers map[string]string) {
+func addHeaders(rw http.ResponseWriter, headers map[string]string) {
 	for k, v := range headers {
 		rw.Header().Add(k, v)
 	}

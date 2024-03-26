@@ -16,6 +16,8 @@ var (
 	GetShortID func() string
 )
 
+type ContextKey struct{ Name string }
+
 func init() {
 	longIDFunc, _ := nanoid.Standard(24)
 	GetLongID = longIDFunc

@@ -10,7 +10,10 @@ import (
 
 func HandleIndex(r *router.Router, filePath string) {
 	fmt.Printf("index path: %s\n", filePath)
-	r.Get("/*", func(rw router.ResponseWriter, req *http.Request) {
+	if !strings.Contains(filePath, ".") {
+		panic("index route needs a file path, not folder path")
+	}
+	r.Get("/*", func(rw http.ResponseWriter, req *http.Request) {
 		if strings.Contains(req.URL.Path, ".") {
 			rw.WriteHeader(404)
 			return

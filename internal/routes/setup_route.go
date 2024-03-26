@@ -4,40 +4,34 @@ import (
 	"net/http"
 
 	"github.com/Everything-Explained/go-server/configs"
+	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
-	"github.com/Everything-Explained/go-server/internal/routes/guards"
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
 func HandleSetup(r *router.Router) {
-	ag := guards.GetAuthGuard()
-	r.GetWithGuard("/setup", ag.HandlerFunc, router.RouteData{
-		HandlerFunc: getSetupRoute(ag),
-	})
+	r.Get("/setup", getSetupHandler(), middleware.AuthGuard)
 }
 
-func getSetupRoute(ag guards.AuthGuard) router.HandlerFunc {
-	return func(rw router.ResponseWriter, req *http.Request) {
-		ctxVal, err := ag.GetContextValue(rw)
-		if err != nil {
-			panic(err)
-		}
-		id := ctxVal.Id
-		if !ctxVal.HasAuth {
+func getSetupHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		agData := middleware.GetAuthGuardData(r)
+		id := agData.Id
+		if !agData.HasAuth {
 			id = writers.UserWriter.AddUser(false)
 		}
 
 		red33mStatus := "no"
-		if ctxVal.IsRed33med {
+		if agData.IsRed33med {
 			red33mStatus = "yes"
 		}
 
-		if !ctxVal.HasAuth {
-			rw.Header().Add("X-Evex-Id", id)
+		if !agData.HasAuth {
+			w.Header().Add("X-Evex-Id", id)
 		}
-		rw.Header().Add("X-Evex-Red33m", red33mStatus)
+		w.Header().Add("X-Evex-Red33m", red33mStatus)
 		versionFile := configs.GetConfig().DataPath + "/versions.json"
-		err = router.FileServer.ServeNoCache(versionFile, rw, req)
+		err := router.FileServer.ServeNoCache(versionFile, w, r)
 		if err != nil {
 			panic(err)
 		}
