@@ -22,6 +22,7 @@ func init() {
 type responseWrapper struct {
 	http.ResponseWriter
 	statusCode int
+	written    []byte
 }
 
 func (w *responseWrapper) WriteHeader(statusCode int) {
@@ -29,51 +30,69 @@ func (w *responseWrapper) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
-func LogRequests(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		query := ""
-		if req.URL.RawQuery != "" {
-			query = req.URL.RawQuery
-		}
+func (w *responseWrapper) Write(b []byte) (int, error) {
+	w.written = b
+	return w.ResponseWriter.Write(b)
+}
 
-		host := req.Host
-		if host == "" {
-			host = req.RemoteAddr
-		}
+/*
+LogRequests returns a middleware that logs all requests that respond
+with a status code less than the provided value.
+*/
+func LogRequests(statusCode int) router.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			query := ""
+			if req.URL.RawQuery != "" {
+				query = req.URL.RawQuery
+			}
 
-		url, err := req.URL.Parse(req.URL.RequestURI())
-		if err != nil {
-			panic(err)
-		}
+			host := req.Host
+			if host == "" {
+				host = req.RemoteAddr
+			}
 
-		agent := strings.Join(req.Header["User-Agent"], ",")
-		country := strings.Join(req.Header[http.CanonicalHeaderKey("CF-IPCountry")], ",")
-		now := time.Now().UnixMicro()
+			url, err := req.URL.Parse(req.URL.RequestURI())
+			if err != nil {
+				panic(err)
+			}
 
-		respWriterWrapper := &responseWrapper{
-			ResponseWriter: w,
-			statusCode:     http.StatusOK,
-		}
+			agent := strings.Join(req.Header["User-Agent"], ",")
+			country := strings.Join(req.Header[http.CanonicalHeaderKey("CF-IPCountry")], ",")
+			now := time.Now().UnixMicro()
 
-		next.ServeHTTP(respWriterWrapper, req)
+			respWriterWrapper := &responseWrapper{
+				ResponseWriter: w,
+				statusCode:     http.StatusOK,
+			}
 
-		body, err := router.GetContextValue[string](router.ReqBodyKey, req)
-		if err != nil {
-			panic(err)
-		}
+			next.ServeHTTP(respWriterWrapper, req)
 
-		writers.Log.Info(
-			logName,
-			time.Now().UnixMilli(),
-			agent,
-			req.Method,
-			host,
-			country,
-			url.Path,
-			query,
-			body,
-			respWriterWrapper.statusCode,
-			fmt.Sprintf("%dµs", time.Now().UnixMicro()-now),
-		)
-	})
+			if respWriterWrapper.statusCode < statusCode {
+				return
+			}
+
+			body, err := router.GetContextValue[string](router.ReqBodyKey, req)
+			if err != nil {
+				panic(err)
+			}
+
+			writtenResp := string(respWriterWrapper.written)
+			reqSpeed := fmt.Sprintf("%dµs", time.Now().UnixMicro()-now)
+
+			writers.Log.Info(
+				logName,
+				agent,
+				req.Method,
+				host,
+				country,
+				url.Path,
+				query,
+				body,
+				writtenResp,
+				respWriterWrapper.statusCode,
+				reqSpeed,
+			)
+		})
+	}
 }
