@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	logFolderPath = "./logs"
-	separator     = "<|>"
+	logFolderPath string = "./logs"
+	separator     string = "<|>"
 )
 
 type LogLevel byte
@@ -74,7 +74,7 @@ func log(name string, level LogLevel, messages ...any) {
 	now := time.Now().UnixMilli()
 
 	l.WriteString(
-		fmt.Sprintf("%dms%d%s%s%s\n", now, level, separator, id, buildLog(messages...)),
+		fmt.Sprintf("%dms%s%s\n", now, buildLog(level, id), buildLog(messages...)),
 		true,
 	)
 }
