@@ -10,7 +10,12 @@ import (
 )
 
 func HandleSetup(r *router.Router) {
-	r.Get("/setup", getSetupHandler(), middleware.AuthGuard)
+	r.Get(
+		"/setup",
+		getSetupHandler(),
+		middleware.LogRequests(http.StatusBadRequest),
+		middleware.AuthGuard,
+	)
 }
 
 func getSetupHandler() http.HandlerFunc {

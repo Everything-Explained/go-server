@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
 )
 
@@ -22,5 +23,5 @@ func HandleIndex(r *router.Router, filePath string) {
 		if err != nil {
 			panic(err)
 		}
-	})
+	}, middleware.LogRequests(http.StatusBadRequest))
 }

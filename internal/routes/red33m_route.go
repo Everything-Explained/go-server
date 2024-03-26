@@ -37,7 +37,6 @@ func HandleRed33m(r *router.Router) {
 			fmt.Fprintf(w, "invalid password")
 			return
 		}
-
 		writers.UserWriter.UpdateUser(agData.Id, true)
-	}, middleware.AuthGuard)
+	}, middleware.LogRequests(0), middleware.AuthGuard)
 }

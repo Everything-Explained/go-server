@@ -11,9 +11,19 @@ import (
 )
 
 func HandleData(r *router.Router) {
-	r.Get("/data/{content}/{visibility}", getSummaryDataHandler(), middleware.AuthGuard)
+	r.Get(
+		"/data/{content}/{visibility}",
+		getSummaryDataHandler(),
+		middleware.LogRequests(http.StatusBadRequest),
+		middleware.AuthGuard,
+	)
 
-	r.Get("/data/{content}/{visibility}/{file}", getMDHTMLHandler(), middleware.AuthGuard)
+	r.Get(
+		"/data/{content}/{visibility}/{file}",
+		getMDHTMLHandler(),
+		middleware.LogRequests(http.StatusBadRequest),
+		middleware.AuthGuard,
+	)
 }
 
 func getSummaryDataHandler() http.HandlerFunc {
