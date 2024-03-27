@@ -79,6 +79,10 @@ func (r *Router) GetStatic(
 	}, mw...)
 }
 
+func (r *Router) ListenAndServe(addr string, port int) error {
+	return http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), r.Handler)
+}
+
 func GetContextValue[T any](key any, r *http.Request) (T, error) {
 	v, ok := r.Context().Value(key).(T)
 	if !ok {

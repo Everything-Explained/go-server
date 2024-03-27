@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Everything-Explained/go-server/configs"
@@ -28,10 +27,8 @@ func main() {
 		middleware.LogRequests(http.StatusBadRequest),
 	)
 
-	s := http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: r.Handler,
+	err := r.ListenAndServe("127.0.0.1", cfg.Port)
+	if err != nil {
+		panic(err)
 	}
-
-	s.ListenAndServe()
 }
