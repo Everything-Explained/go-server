@@ -10,19 +10,17 @@ import (
 	"github.com/Everything-Explained/go-server/internal/router"
 )
 
-func HandleData(r *router.Router) {
+func HandleData(r *router.Router, mw ...router.Middleware) {
 	r.Get(
 		"/data/{content}/{visibility}",
 		getSummaryDataHandler(),
-		middleware.LogRequests(http.StatusBadRequest),
-		middleware.AuthGuard,
+		mw...,
 	)
 
 	r.Get(
 		"/data/{content}/{visibility}/{file}",
 		getMDHTMLHandler(),
-		middleware.LogRequests(http.StatusBadRequest),
-		middleware.AuthGuard,
+		mw...,
 	)
 }
 

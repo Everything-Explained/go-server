@@ -98,7 +98,7 @@ func GetBody(r *http.Request) string {
 func (r *Router) createHandler(
 	path string,
 	m Method,
-	handler http.HandlerFunc,
+	handler http.Handler,
 	mw ...Middleware,
 ) {
 	if !strings.HasPrefix(path, "/") {
@@ -113,19 +113,19 @@ func (r *Router) createHandler(
 	route := fmt.Sprintf("%s %s", m, path)
 
 	if chain != nil {
-		r.Handler.Handle(route, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Handler.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 			reqWithBody := r.WithContext(
 				context.WithValue(r.Context(), ReqBodyKey, readBody(r)),
 			)
 			chain(handler).ServeHTTP(w, reqWithBody)
-		}))
+		})
 		return
 	}
 
-	r.Handler.Handle(route, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Handler.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 		reqWithBody := r.WithContext(context.WithValue(r.Context(), ReqBodyKey, readBody(r)))
 		handler.ServeHTTP(w, reqWithBody)
-	}))
+	})
 }
 
 func readBody(r *http.Request) string {

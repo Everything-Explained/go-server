@@ -6,16 +6,14 @@ import (
 	"strings"
 
 	"github.com/Everything-Explained/go-server/configs"
-	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
-func HandleSetup(r *router.Router) {
+func HandleSetup(r *router.Router, mw ...router.Middleware) {
 	r.Get(
 		"/setup",
 		getSetupHandler(),
-		middleware.LogRequests(http.StatusBadRequest),
 	)
 }
 

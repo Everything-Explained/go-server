@@ -1,14 +1,11 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/Everything-Explained/go-server/configs"
-	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
 )
 
-func HandleAssets(r *router.Router) {
+func HandleAssets(r *router.Router, mw ...router.Middleware) {
 	assetDir := configs.GetConfig().ClientPath + "/assets"
-	r.GetStatic("/assets", assetDir, middleware.LogRequests(http.StatusBadRequest))
+	r.GetStatic("/assets", assetDir, mw...)
 }

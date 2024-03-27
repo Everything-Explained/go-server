@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HandleRed33m(r *router.Router) {
+func HandleRed33m(r *router.Router, mw ...router.Middleware) {
 	r.Post("/red33m", func(w http.ResponseWriter, r *http.Request) {
 		agData := middleware.GetAuthGuardData(r)
 
@@ -21,14 +21,17 @@ func HandleRed33m(r *router.Router) {
 			return
 		}
 
-		body := router.GetBody(r)
+		body, err := router.GetContextValue[string](router.ReqBodyKey, r)
+		if err != nil {
+			panic(err)
+		}
 		if body == "" {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "missing body")
 			return
 		}
 
-		err := bcrypt.CompareHashAndPassword(
+		err = bcrypt.CompareHashAndPassword(
 			[]byte(configs.GetConfig().Red33mPassword),
 			[]byte(body),
 		)
@@ -38,5 +41,5 @@ func HandleRed33m(r *router.Router) {
 			return
 		}
 		writers.UserWriter.UpdateUser(agData.Id, true)
-	}, middleware.LogRequests(0), middleware.AuthGuard)
+	}, mw...)
 }
