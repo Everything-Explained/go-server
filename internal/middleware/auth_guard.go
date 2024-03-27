@@ -22,7 +22,7 @@ type AuthGuardData struct {
 func GetAuthGuardData(r *http.Request) AuthGuardData {
 	data, err := router.GetContextValue[AuthGuardData](AuthGuardContextKey, r)
 	if err != nil {
-		panic(err)
+		panic("missing auth guard data; did you forget to add the auth guard middleware?")
 	}
 	return data
 }
