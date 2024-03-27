@@ -29,8 +29,6 @@ func GetAuthGuardData(r *http.Request) AuthGuardData {
 
 func AuthGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isSettingUp := r.URL.Path == "/setup"
-
 		authHeadArray := r.Header["Authorization"]
 		if len(authHeadArray) == 0 {
 			w.WriteHeader(401)
@@ -43,15 +41,6 @@ func AuthGuard(next http.Handler) http.Handler {
 		if !strings.HasPrefix(authHead, "Bearer ") {
 			w.WriteHeader(401)
 			fmt.Fprintf(w, "missing bearer")
-			return
-		}
-
-		if isSettingUp && authHead == "Bearer setup" {
-			ctx := context.WithValue(r.Context(), AuthGuardContextKey, AuthGuardData{
-				IsRed33med: false,
-				HasAuth:    false,
-			})
-			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 
