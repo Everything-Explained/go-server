@@ -72,11 +72,7 @@ func LogRequests(statusCode int) router.Middleware {
 				return
 			}
 
-			body, err := router.GetContextValue[string](router.ReqBodyKey, req)
-			if err != nil {
-				panic(err)
-			}
-
+			body := router.GetBody(req)
 			writtenResp := string(respWriterWrapper.written)
 			reqSpeed := fmt.Sprintf("%dµs", time.Now().UnixMicro()-now)
 

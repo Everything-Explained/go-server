@@ -21,7 +21,7 @@ const (
 	DELETE Method = "DELETE"
 )
 
-var ReqBodyKey = &internal.ContextKey{Name: "body"}
+var reqBodyKey = &internal.ContextKey{Name: "body"}
 
 func NewRouter() *Router {
 	sx := http.NewServeMux()
@@ -88,9 +88,9 @@ func (r *Router) GetStatic(
 }
 
 func GetBody(r *http.Request) string {
-	body, ok := r.Context().Value(ReqBodyKey).(string)
+	body, ok := r.Context().Value(reqBodyKey).(string)
 	if !ok {
-		panic("missing body context")
+		panic("request is missing 'body' context")
 	}
 	return body
 }
@@ -115,7 +115,7 @@ func (r *Router) createHandler(
 	if chain != nil {
 		r.Handler.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 			reqWithBody := r.WithContext(
-				context.WithValue(r.Context(), ReqBodyKey, readBody(r)),
+				context.WithValue(r.Context(), reqBodyKey, readBody(r)),
 			)
 			chain(handler).ServeHTTP(w, reqWithBody)
 		})
@@ -123,7 +123,7 @@ func (r *Router) createHandler(
 	}
 
 	r.Handler.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-		reqWithBody := r.WithContext(context.WithValue(r.Context(), ReqBodyKey, readBody(r)))
+		reqWithBody := r.WithContext(context.WithValue(r.Context(), reqBodyKey, readBody(r)))
 		handler.ServeHTTP(w, reqWithBody)
 	})
 }

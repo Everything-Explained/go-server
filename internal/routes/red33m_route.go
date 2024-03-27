@@ -21,17 +21,14 @@ func HandleRed33m(r *router.Router, mw ...router.Middleware) {
 			return
 		}
 
-		body, err := router.GetContextValue[string](router.ReqBodyKey, r)
-		if err != nil {
-			panic(err)
-		}
+		body := router.GetBody(r)
 		if body == "" {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "missing body")
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword(
+		err := bcrypt.CompareHashAndPassword(
 			[]byte(configs.GetConfig().Red33mPassword),
 			[]byte(body),
 		)
