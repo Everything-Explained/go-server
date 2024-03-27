@@ -10,6 +10,12 @@ import (
 	"github.com/Everything-Explained/go-server/internal/router"
 )
 
+/*
+HandleData serves as the root route for all meaningful content
+on the site (literature, videos, etc...)
+
+🟠 Requires the auth guard middleware.
+*/
 func HandleData(r *router.Router, mw ...router.Middleware) {
 	r.Get(
 		"/data/{content}/{visibility}",

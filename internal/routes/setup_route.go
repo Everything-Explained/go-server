@@ -10,6 +10,12 @@ import (
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
+/*
+HandleSetup responds with the version file, route authorization
+ID header, & red33m status header. The client should use the
+ID, when requesting from routes protected by the auth guard
+middleware.
+*/
 func HandleSetup(r *router.Router, mw ...router.Middleware) {
 	r.Get(
 		"/setup",

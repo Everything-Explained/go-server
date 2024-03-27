@@ -11,6 +11,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+/*
+HandleRed33m sets the state of a user ID, to be able to access
+red33m content.
+
+🟠 Requires the auth guard middleware.
+*/
 func HandleRed33m(r *router.Router, mw ...router.Middleware) {
 	r.Post("/red33m", func(w http.ResponseWriter, r *http.Request) {
 		agData := middleware.GetAuthGuardData(r)
