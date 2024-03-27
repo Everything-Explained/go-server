@@ -34,14 +34,6 @@ type Router struct {
 	Handler *http.ServeMux
 }
 
-func GetContextValue[T any](key any, r *http.Request) (T, error) {
-	v, ok := r.Context().Value(key).(T)
-	if !ok {
-		return v, fmt.Errorf("could not find context key: %v", key)
-	}
-	return v, nil
-}
-
 func (r *Router) Get(route string, handler http.HandlerFunc, mw ...Middleware) {
 	r.createHandler(route, GET, handler, mw...)
 }
@@ -85,6 +77,14 @@ func (r *Router) GetStatic(
 			panic(err)
 		}
 	}, mw...)
+}
+
+func GetContextValue[T any](key any, r *http.Request) (T, error) {
+	v, ok := r.Context().Value(key).(T)
+	if !ok {
+		return v, fmt.Errorf("could not find context key: %v", key)
+	}
+	return v, nil
 }
 
 func GetBody(r *http.Request) string {
