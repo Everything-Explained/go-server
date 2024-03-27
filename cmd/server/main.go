@@ -13,24 +13,24 @@ import (
 func main() {
 	cfg := configs.GetConfig()
 
-	mainRouter := router.NewRouter()
-	routes.HandleAssets(mainRouter, middleware.LogRequests(http.StatusBadRequest))
-	routes.HandleSetup(mainRouter, middleware.LogRequests(http.StatusBadRequest))
-	routes.HandleRed33m(mainRouter, middleware.LogRequests(0), middleware.AuthGuard)
+	r := router.NewRouter()
+	routes.HandleAssets(r, middleware.LogRequests(http.StatusBadRequest))
+	routes.HandleSetup(r, middleware.LogRequests(http.StatusBadRequest))
+	routes.HandleRed33m(r, middleware.LogRequests(0), middleware.AuthGuard)
 	routes.HandleData(
-		mainRouter,
+		r,
 		middleware.LogRequests(http.StatusBadRequest),
 		middleware.AuthGuard,
 	)
 	routes.HandleIndex(
-		mainRouter,
+		r,
 		cfg.ClientPath+"/index.html",
 		middleware.LogRequests(http.StatusBadRequest),
 	)
 
 	s := http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: mainRouter.Handler,
+		Handler: r.Handler,
 	}
 
 	s.ListenAndServe()
