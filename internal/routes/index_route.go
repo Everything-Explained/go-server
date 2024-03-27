@@ -22,5 +22,5 @@ func HandleIndex(r *router.Router, filePath string, mw ...router.Middleware) {
 		if err != nil {
 			panic(err)
 		}
-	})
+	}, mw...)
 }
