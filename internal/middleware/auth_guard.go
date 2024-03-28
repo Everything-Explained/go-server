@@ -29,22 +29,20 @@ func GetAuthGuardData(r *http.Request) AuthGuardData {
 
 func AuthGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeadArray := r.Header["Authorization"]
-		if len(authHeadArray) == 0 {
+		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+		if authHeader == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprint(w, "missing auth")
 			return
 		}
 
-		authHead := strings.TrimSpace(authHeadArray[0])
-
-		if !strings.HasPrefix(authHead, "Bearer ") {
+		if !strings.HasPrefix(authHeader, "Bearer ") {
 			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprintf(w, "missing bearer")
 			return
 		}
 
-		id := strings.Split(authHead, " ")[1]
+		id := strings.TrimPrefix(authHeader, "Bearer ")
 		userState, err := writers.UserWriter.GetUserState(id)
 		if err != nil {
 			w.WriteHeader(http.StatusForbidden)
