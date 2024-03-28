@@ -62,7 +62,7 @@ func (r *Router) GetStatic(
 
 	r.Get(fmt.Sprintf("%s/{file}", route), func(rw http.ResponseWriter, req *http.Request) {
 		if !strings.Contains(req.URL.Path, ".") {
-			rw.WriteHeader(404)
+			rw.WriteHeader(http.StatusNotFound)
 			return
 		}
 

@@ -22,14 +22,14 @@ func HandleRed33m(r *router.Router, mw ...router.Middleware) {
 		agData := middleware.GetAuthGuardData(r)
 
 		if agData.IsRed33med {
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "already logged in")
 			return
 		}
 
 		body := router.GetBody(r)
 		if body == "" {
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "missing body")
 			return
 		}
@@ -39,7 +39,7 @@ func HandleRed33m(r *router.Router, mw ...router.Middleware) {
 			[]byte(body),
 		)
 		if err != nil {
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprintf(w, "invalid password")
 			return
 		}

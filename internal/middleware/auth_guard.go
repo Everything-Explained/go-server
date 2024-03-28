@@ -31,7 +31,7 @@ func AuthGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeadArray := r.Header["Authorization"]
 		if len(authHeadArray) == 0 {
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprint(w, "missing auth")
 			return
 		}
@@ -39,7 +39,7 @@ func AuthGuard(next http.Handler) http.Handler {
 		authHead := strings.TrimSpace(authHeadArray[0])
 
 		if !strings.HasPrefix(authHead, "Bearer ") {
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprintf(w, "missing bearer")
 			return
 		}
@@ -47,7 +47,7 @@ func AuthGuard(next http.Handler) http.Handler {
 		id := strings.Split(authHead, " ")[1]
 		userState, err := writers.UserWriter.GetUserState(id)
 		if err != nil {
-			w.WriteHeader(403)
+			w.WriteHeader(http.StatusForbidden)
 			fmt.Fprint(w, "suspicious activity detected")
 			return
 		}

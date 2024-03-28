@@ -15,7 +15,7 @@ func HandleIndex(r *router.Router, filePath string, mw ...router.Middleware) {
 	}
 	r.Get("/", func(rw http.ResponseWriter, req *http.Request) {
 		if strings.Contains(req.URL.Path, ".") {
-			rw.WriteHeader(404)
+			rw.WriteHeader(http.StatusNotFound)
 			return
 		}
 		err := router.FileServer.ServeNoCache(filePath, rw, req)

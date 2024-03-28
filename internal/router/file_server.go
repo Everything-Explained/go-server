@@ -64,7 +64,7 @@ func (ffs fileServer) ServeNoCache(
 	if err != nil {
 		if os.IsNotExist(err) {
 			// TODO  Log file not found
-			rw.WriteHeader(404)
+			rw.WriteHeader(http.StatusNotFound)
 			return nil
 		}
 		return err
@@ -76,7 +76,7 @@ func (ffs fileServer) ServeNoCache(
 
 	if !ff.IsModified {
 		addHeaders(rw, headers)
-		rw.WriteHeader(304)
+		rw.WriteHeader(http.StatusNotModified)
 		return nil
 	}
 
@@ -109,7 +109,7 @@ func (ffs fileServer) ServeMaxCache(
 	if err != nil {
 		if os.IsNotExist(err) {
 			// TODO  Log file not found
-			rw.WriteHeader(404)
+			rw.WriteHeader(http.StatusNotFound)
 			return nil
 		}
 		return err

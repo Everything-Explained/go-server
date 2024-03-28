@@ -40,7 +40,7 @@ func getSummaryDataHandler() http.HandlerFunc {
 
 		// Only supports non-file requests; all other requests are abnormal
 		if strings.Contains(visibility, ".") || notRed33med {
-			w.WriteHeader(403)
+			w.WriteHeader(http.StatusForbidden)
 			fmt.Fprint(w, "suspicious activity detected")
 			return
 		}
@@ -64,7 +64,7 @@ func getMDHTMLHandler() http.HandlerFunc {
 
 		// Only supports MDHTML files; all other requests are abnormal
 		if !strings.HasSuffix(file, ".mdhtml") || notRed33med {
-			w.WriteHeader(403)
+			w.WriteHeader(http.StatusForbidden)
 			fmt.Fprint(w, "suspicious activity")
 			return
 		}

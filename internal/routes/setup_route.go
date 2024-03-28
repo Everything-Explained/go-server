@@ -32,7 +32,7 @@ func getSetupHandler() http.HandlerFunc {
 			strings.Contains(strings.TrimSpace(authHeadArray[0]), " ")
 
 		if headLen == 0 || !isValidAuth {
-			w.WriteHeader(403)
+			w.WriteHeader(http.StatusForbidden)
 			fmt.Fprint(w, "suspicious activity detected")
 			return
 		}
@@ -50,7 +50,7 @@ func getSetupHandler() http.HandlerFunc {
 		state, err := writers.UserWriter.GetUserState(id)
 		if err != nil {
 			// Client should try to get a new ID
-			w.WriteHeader(205)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
