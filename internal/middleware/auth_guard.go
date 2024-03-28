@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -30,15 +29,8 @@ func GetAuthGuardData(r *http.Request) AuthGuardData {
 func AuthGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
-		if authHeader == "" {
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprint(w, "missing auth")
-			return
-		}
-
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintf(w, "missing bearer")
 			return
 		}
 
@@ -46,7 +38,6 @@ func AuthGuard(next http.Handler) http.Handler {
 		userState, err := writers.UserWriter.GetUserState(id)
 		if err != nil {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprint(w, "suspicious activity detected")
 			return
 		}
 
@@ -55,6 +46,7 @@ func AuthGuard(next http.Handler) http.Handler {
 			HasAuth:    true,
 			Id:         id,
 		})
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
