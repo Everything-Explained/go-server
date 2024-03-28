@@ -38,10 +38,9 @@ func getSummaryDataHandler() http.HandlerFunc {
 		visibility := r.PathValue("visibility")
 		notRed33med := strings.Contains(visibility, "red33m") && !agData.IsRed33med
 
-		// Only supports non-file requests; all other requests are abnormal
+		// Only supports non-file requests
 		if strings.Contains(visibility, ".") || notRed33med {
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprint(w, "suspicious activity detected")
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
@@ -62,10 +61,9 @@ func getMDHTMLHandler() http.HandlerFunc {
 		file := r.PathValue("file")
 		notRed33med := strings.Contains(visibility, "red33m") && !agData.IsRed33med
 
-		// Only supports MDHTML files; all other requests are abnormal
+		// Only supports MDHTML files
 		if !strings.HasSuffix(file, ".mdhtml") || notRed33med {
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprint(w, "suspicious activity")
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
