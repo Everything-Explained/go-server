@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -30,7 +29,6 @@ func getSetupHandler() http.HandlerFunc {
 
 		if authHeader == "" || !strings.Contains(authHeader, "Bearer ") {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprint(w, "suspicious activity detected")
 			return
 		}
 
