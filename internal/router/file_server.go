@@ -63,7 +63,6 @@ func (ffs fileServer) ServeNoCache(
 	ff, err := ffs.getFastFile(filePath, req.Header.Get("If-Modified-Since"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			// TODO  Log file not found
 			rw.WriteHeader(http.StatusNotFound)
 			return nil
 		}
@@ -108,7 +107,6 @@ func (ffs fileServer) ServeMaxCache(
 	ff, err := ffs.getFastFile(filePath, "")
 	if err != nil {
 		if os.IsNotExist(err) {
-			// TODO  Log file not found
 			rw.WriteHeader(http.StatusNotFound)
 			return nil
 		}
