@@ -273,20 +273,15 @@ func loadFileInfo(filePath string, ifModSince string) (*fastFileInfo, error) {
 		return nil, err
 	}
 
+	var content []byte = []byte{}
 	fileModStr := internal.GetGMTFrom(fs.ModTime())
+	isModified := fileModStr != ifModSince
 
-	if fileModStr == ifModSince {
-		fi := &fastFileInfo{
-			LastModified: fileModStr,
-			ContentType:  ct,
-			Content:      []byte{},
+	if isModified {
+		content, err = io.ReadAll(f)
+		if err != nil {
+			return nil, err
 		}
-		return fi, nil
-	}
-
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return nil, err
 	}
 
 	fi := &fastFileInfo{
@@ -294,8 +289,9 @@ func loadFileInfo(filePath string, ifModSince string) (*fastFileInfo, error) {
 		ContentType:  ct,
 		Content:      content,
 		Length:       len(content),
-		IsModified:   true,
+		IsModified:   isModified,
 	}
+
 	return fi, nil
 }
 
