@@ -26,19 +26,15 @@ func HandleSetup(r *router.Router, mw ...router.Middleware) {
 
 func getSetupHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authHeadArray := r.Header["Authorization"]
-		headLen := len(authHeadArray)
-		isValidAuth := headLen > 0 &&
-			strings.Contains(strings.TrimSpace(authHeadArray[0]), " ")
+		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 
-		if headLen == 0 || !isValidAuth {
+		if authHeader == "" || !strings.Contains(authHeader, "Bearer ") {
 			w.WriteHeader(http.StatusForbidden)
 			fmt.Fprint(w, "suspicious activity detected")
 			return
 		}
 
-		authStr := strings.TrimSpace(authHeadArray[0])
-		if authStr == "Bearer setup" {
+		if authHeader == "Bearer setup" {
 			id := writers.UserWriter.AddUser(false)
 			w.Header().Add("X-Evex-Id", id)
 			w.Header().Add("X-Evex-Red33m", "no")
@@ -46,7 +42,7 @@ func getSetupHandler() http.HandlerFunc {
 			return
 		}
 
-		id := strings.Split(authStr, " ")[1]
+		id := strings.TrimPrefix(authHeader, "Bearer ")
 		state, err := writers.UserWriter.GetUserState(id)
 		if err != nil {
 			// Client should try to get a new ID
