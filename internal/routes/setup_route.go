@@ -20,14 +20,18 @@ func HandleSetup(r *router.Router, mw ...router.Middleware) {
 	r.Get(
 		"/setup",
 		getSetupHandler(),
+		mw...,
 	)
 }
 
 func getSetupHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeadArray := r.Header["Authorization"]
-		isValidAuth := strings.Contains(strings.TrimSpace(authHeadArray[0]), " ")
-		if len(authHeadArray) == 0 || !isValidAuth {
+		headLen := len(authHeadArray)
+		isValidAuth := headLen > 0 &&
+			strings.Contains(strings.TrimSpace(authHeadArray[0]), " ")
+
+		if headLen == 0 || !isValidAuth {
 			w.WriteHeader(403)
 			fmt.Fprint(w, "suspicious activity detected")
 			return
