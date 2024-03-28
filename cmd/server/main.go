@@ -12,22 +12,28 @@ import (
 func main() {
 	cfg := configs.GetConfig()
 
-	r := router.NewRouter()
-	routes.HandleAssets(r, middleware.LogRequests(http.StatusBadRequest))
-	routes.HandleSetup(r, middleware.LogRequests(http.StatusBadRequest))
-	routes.HandleRed33m(r, middleware.LogRequests(0), middleware.AuthGuard)
-	routes.HandleData(
-		r,
+	rootRouter := router.NewRouter()
+	routes.HandleAssets(rootRouter, middleware.LogRequests(http.StatusBadRequest))
+	routes.HandleSetup(rootRouter, middleware.LogRequests(http.StatusBadRequest))
+	routes.HandleIndex(
+		rootRouter,
+		cfg.ClientPath+"/index.html",
+		middleware.LogRequests(0),
+	)
+
+	authRouter := router.NewRouter()
+	routes.HandleRed33m(authRouter)
+	routes.HandleData(authRouter)
+
+	router.AddSubRoute(
+		"/authed",
+		rootRouter,
+		authRouter,
 		middleware.LogRequests(http.StatusBadRequest),
 		middleware.AuthGuard,
 	)
-	routes.HandleIndex(
-		r,
-		cfg.ClientPath+"/index.html",
-		middleware.LogRequests(http.StatusBadRequest),
-	)
 
-	err := r.ListenAndServe("127.0.0.1", cfg.Port)
+	err := rootRouter.ListenAndServe("127.0.0.1", cfg.Port)
 	if err != nil {
 		panic(err)
 	}

@@ -13,7 +13,7 @@ func HandleIndex(r *router.Router, filePath string, mw ...router.Middleware) {
 	if !strings.Contains(filePath, ".") {
 		panic("index route needs a file path, not folder path")
 	}
-	r.Get("/", func(rw http.ResponseWriter, req *http.Request) {
+	r.Any("/", func(rw http.ResponseWriter, req *http.Request) {
 		if strings.Contains(req.URL.Path, ".") {
 			rw.WriteHeader(http.StatusNotFound)
 			return

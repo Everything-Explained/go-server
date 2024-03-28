@@ -14,11 +14,12 @@ import (
 type Method string
 
 const (
-	GET    Method = "GET"
-	POST   Method = "POST"
-	PUT    Method = "PUT"
-	PATCH  Method = "PATCH"
-	DELETE Method = "DELETE"
+	ANY    Method = ""
+	GET    Method = "GET "
+	POST   Method = "POST "
+	PUT    Method = "PUT "
+	PATCH  Method = "PATCH "
+	DELETE Method = "DELETE "
 )
 
 var reqBodyKey = &internal.ContextKey{Name: "body"}
@@ -30,8 +31,43 @@ func NewRouter() *Router {
 	}
 }
 
+func AddSubRoute(path string, parentRouter *Router, childRouter *Router, mw ...Middleware) {
+	if path == "/" {
+		panic("sub-route cannot be the root route")
+	}
+
+	if path[:len(path)-1] == "/" {
+		panic("sub-route cannot have trailing forward slash '/'")
+	}
+
+	if childRouter.mwCount > 0 && len(mw) > 0 {
+		panic(
+			"route-level middleware is not allowed with sub-route middleware; use one or the other",
+		)
+	}
+
+	if len(mw) > 0 {
+		parentRouter.createHandler(
+			path+"/",
+			ANY,
+			http.StripPrefix(path, childRouter.Handler),
+			mw...)
+		return
+	}
+
+	parentRouter.createHandler(path+"/", ANY, http.StripPrefix(path, childRouter.Handler))
+}
+
 type Router struct {
 	Handler *http.ServeMux
+	mwCount int
+}
+
+/*
+Any sets up a route that accepts all methods (GET, POST, etc...)
+*/
+func (r *Router) Any(route string, handler http.HandlerFunc, mw ...Middleware) {
+	r.createHandler(route, ANY, handler, mw...)
 }
 
 func (r *Router) Get(route string, handler http.HandlerFunc, mw ...Middleware) {
@@ -106,15 +142,20 @@ func (r *Router) createHandler(
 	mw ...Middleware,
 ) {
 	if !strings.HasPrefix(path, "/") {
-		panic("invalid path, all paths should start with a: /")
+		panic("all route paths must start with a forward slash: '/'")
+	}
+
+	if strings.Contains(path, " ") {
+		panic("route paths cannot contain spaces")
 	}
 
 	var chain Middleware
 	if len(mw) > 0 {
 		chain = CreateMiddlewareChain(mw...)
+		r.mwCount += len(mw)
 	}
 
-	route := fmt.Sprintf("%s %s", m, path)
+	route := fmt.Sprintf("%s%s", m, path)
 
 	if chain != nil {
 		r.Handler.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
