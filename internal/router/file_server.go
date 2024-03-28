@@ -255,7 +255,7 @@ func getContentType(ext string) string {
 loadFileInfo reads the contents of the specified file, ONLY if
 the file is new.
 
-📝 The Content field will be an empty byte slice if the
+📝 The Content field will be a nil byte slice if the
 file is NOT modified.
 */
 func loadFileInfo(filePath string, ifModSince string) (*fastFileInfo, error) {
@@ -271,7 +271,7 @@ func loadFileInfo(filePath string, ifModSince string) (*fastFileInfo, error) {
 		return nil, err
 	}
 
-	var content []byte = []byte{}
+	var content []byte
 	fileModStr := internal.GetGMTFrom(fs.ModTime())
 	isModified := fileModStr != ifModSince
 
