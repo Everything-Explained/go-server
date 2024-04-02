@@ -41,7 +41,10 @@ func fileChannel(fw *FileWriter, file *os.File, ch chan ChannelData) {
 
 	for chanData := range ch {
 		if chanData.IsAppending {
-			file.WriteString(chanData.String)
+			_, err := file.WriteString(chanData.String)
+			if err != nil {
+				panic(err)
+			}
 			continue
 		}
 
