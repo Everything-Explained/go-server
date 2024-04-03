@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Everything-Explained/go-server/internal"
 )
@@ -112,7 +113,12 @@ func (r *Router) SetStaticRoute(
 }
 
 func (r *Router) ListenAndServe(addr string, port int) error {
-	return http.ListenAndServe(fmt.Sprintf("%s:%d", addr, port), r.Handler)
+	s := http.Server{
+		Addr:         fmt.Sprintf("%s:%d", addr, port),
+		ReadTimeout:  8 * time.Second,
+		WriteTimeout: 8 * time.Second,
+	}
+	return s.ListenAndServe()
 }
 
 func GetContextValue[T any](key any, r *http.Request) (T, error) {
