@@ -236,7 +236,7 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#identical-branches
       - name: identical-branches
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#if-return
@@ -273,7 +273,7 @@ linters-settings:
           - "crypto/sha1"
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#import-shadowing
       - name: import-shadowing
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#line-length-limit
@@ -290,7 +290,7 @@ linters-settings:
         arguments: [3]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#max-public-structs
       - name: max-public-structs
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
         arguments: [3]
@@ -301,7 +301,7 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#modifies-value-receiver
       - name: modifies-value-receiver
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#nested-structs
@@ -326,12 +326,12 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range-val-in-closure
       - name: range-val-in-closure
-        severity: warning
+        severity: error
         disabled: true
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#range-val-address
       - name: range-val-address
-        severity: warning
+        severity: error
         disabled: true
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#receiver-naming
@@ -346,7 +346,7 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#redefines-builtin-id
       - name: redefines-builtin-id
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#string-of-int
@@ -356,7 +356,7 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#string-format
       - name: string-format
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
         arguments:
@@ -410,7 +410,7 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unconditional-recursion
       - name: unconditional-recursion
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unexported-naming
@@ -425,7 +425,7 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unhandled-error
       - name: unhandled-error
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
         arguments:
@@ -438,7 +438,7 @@ linters-settings:
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unreachable-code
       - name: unreachable-code
-        severity: warning
+        severity: error
         disabled: false
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-parameter
