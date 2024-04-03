@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -81,7 +82,7 @@ func (ffs fileServer) ServeNoCache(
 
 	headers["Cache-Control"] = "public, no-cache"
 	headers["Content-Type"] = ff.ContentType
-	headers["Content-Length"] = fmt.Sprintf("%d", ff.Length)
+	headers["Content-Length"] = strconv.Itoa(ff.Length)
 	addHeaders(rw, headers)
 
 	_, err = rw.Write(ff.Content)
@@ -113,7 +114,7 @@ func (ffs fileServer) ServeMaxCache(filePath string, rw http.ResponseWriter) err
 		"Date":           internal.GetGMTFrom(time.Now()),
 		"Cache-Control":  fmt.Sprintf("public, max-age=%d", longMaxAge),
 		"Content-Type":   ff.ContentType,
-		"Content-Length": fmt.Sprintf("%d", ff.Length),
+		"Content-Length": strconv.Itoa(ff.Length),
 	})
 
 	_, err = rw.Write(ff.Content)
@@ -241,7 +242,7 @@ func getContentType(ext string) string {
 		return fmt.Sprintf("%s; %s", mt, charset)
 	}
 
-	return fmt.Sprintf("text/plain; %s", charset)
+	return "text/plain; " + charset
 }
 
 /*

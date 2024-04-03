@@ -92,12 +92,12 @@ func (r *Router) SetStaticRoute(
 
 	if _, err := os.Stat(folderPath); err != nil {
 		if os.IsNotExist(err) {
-			panic(fmt.Sprintf("static directory does not exist: %s", folderPath))
+			panic("static directory does not exist: " + folderPath)
 		}
 		panic(err)
 	}
 
-	r.Get(fmt.Sprintf("%s/{file}", route), func(rw http.ResponseWriter, req *http.Request) {
+	r.Get(route+"/{file}", func(rw http.ResponseWriter, req *http.Request) {
 		if !strings.Contains(req.URL.Path, ".") {
 			rw.WriteHeader(http.StatusNotFound)
 			return
