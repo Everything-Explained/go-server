@@ -480,6 +480,7 @@ linters:
     - errname
     - prealloc
     - gofumpt
+    - perfsprint
     - nestif
     - intrange
     - usestdlibvars
