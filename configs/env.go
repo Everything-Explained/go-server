@@ -7,14 +7,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var env environment
+var env Environment
 
-type environment struct {
+type Environment struct {
 	InDev          bool
 	ConfigFilePath string
 }
 
-func GetEnv() environment {
+func GetEnv() Environment {
 	if env.ConfigFilePath == "" {
 		wd := internal.GetWorkingDir()
 		if err := godotenv.Load(wd + "/configs/.env.dev"); err != nil {
@@ -23,7 +23,7 @@ func GetEnv() environment {
 			}
 		}
 
-		env = environment{
+		env = Environment{
 			InDev:          os.Getenv("ENV") == "dev",
 			ConfigFilePath: wd + "/configs/" + os.Getenv("CONFIG_FILE"),
 		}

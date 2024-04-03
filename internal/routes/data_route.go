@@ -45,7 +45,7 @@ func getSummaryDataHandler() http.HandlerFunc {
 		}
 
 		filePath := fmt.Sprintf("%s/%s/%s/%s.json", dataPath, content, visibility, visibility)
-		err := router.FileServer.ServeMaxCache(filePath, w, r)
+		err := router.FileServer.ServeMaxCache(filePath, w)
 		if err != nil {
 			panic(err)
 		}
@@ -75,7 +75,7 @@ func getMDHTMLHandler() http.HandlerFunc {
 			file,
 		)
 
-		err := router.FileServer.ServeMaxCache(filePath, w, r)
+		err := router.FileServer.ServeMaxCache(filePath, w)
 		if err != nil {
 			panic(err)
 		}

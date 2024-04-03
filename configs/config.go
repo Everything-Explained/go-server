@@ -24,7 +24,7 @@ type ConfigData struct {
 }
 
 // IMPORTANT: Implement embedding config.yml files
-var config ConfigData = ConfigData{}
+var config = ConfigData{}
 
 func GetConfig() ConfigData {
 	return copyConfig(config)

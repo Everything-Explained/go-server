@@ -7,5 +7,5 @@ import (
 
 func HandleAssets(r *router.Router, mw ...router.Middleware) {
 	assetDir := configs.GetConfig().ClientPath + "/assets"
-	r.GetStatic("/assets", assetDir, mw...)
+	r.SetStaticRoute("/assets", assetDir, mw...)
 }

@@ -23,8 +23,8 @@ const (
 )
 
 var (
-	logs map[string]*FileWriter = map[string]*FileWriter{}
-	Log  logger                 = logger{}
+	logs = make(map[string]*FileWriter)
+	Log  = logger{}
 )
 
 /*
@@ -52,15 +52,15 @@ func NewLogWriter(name string) error {
 
 type logger struct{}
 
-func (lgr logger) Debug(name string, messages ...any) {
+func (logger) Debug(name string, messages ...any) {
 	log(name, DEBUG, messages...)
 }
 
-func (lgr logger) Info(name string, messages ...any) {
+func (logger) Info(name string, messages ...any) {
 	log(name, INFO, messages...)
 }
 
-func (lgr logger) Error(name string, messages ...any) {
+func (logger) Error(name string, messages ...any) {
 	log(name, ERROR, messages...)
 }
 
@@ -82,7 +82,7 @@ func log(name string, level LogLevel, messages ...any) {
 func buildLog(messages ...any) string {
 	sb := strings.Builder{}
 	for _, msg := range messages {
-		sb.WriteString(fmt.Sprintf("%s%v", separator, msg))
+		_, _ = sb.WriteString(fmt.Sprintf("%s%v", separator, msg))
 	}
 	return sb.String()
 }

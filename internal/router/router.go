@@ -78,7 +78,7 @@ func (r *Router) Post(route string, handler http.HandlerFunc, mw ...Middleware) 
 	r.createHandler(route, POST, handler, mw...)
 }
 
-func (r *Router) GetStatic(
+func (r *Router) SetStaticRoute(
 	route string,
 	folderPath string,
 	mw ...Middleware,
@@ -103,11 +103,7 @@ func (r *Router) GetStatic(
 		}
 
 		file := req.PathValue("file")
-		err := FileServer.ServeMaxCache(
-			folderPath+"/"+file,
-			rw,
-			req,
-		)
+		err := FileServer.ServeMaxCache(folderPath+"/"+file, rw)
 		if err != nil {
 			// TODO  Log error
 			panic(err)

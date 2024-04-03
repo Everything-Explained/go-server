@@ -99,11 +99,7 @@ a "Cache-Control" max-age of longMaxAge (6 months as of this comment)
 🟡 This is for routes that have a cache-busting strategy on
 the client side, usually through query params.
 */
-func (ffs fileServer) ServeMaxCache(
-	filePath string,
-	rw http.ResponseWriter,
-	req *http.Request,
-) error {
+func (ffs fileServer) ServeMaxCache(filePath string, rw http.ResponseWriter) error {
 	ff, err := ffs.getFastFile(filePath, "")
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -142,10 +138,7 @@ the "Last-Modified" header.
 respond to requests with a "Last-Modified" and "Cache-Control"
 header.
 */
-func (ffs fileServer) getFastFile(
-	path string,
-	ifModifiedSince string,
-) (*fastFileInfo, error) {
+func (fileServer) getFastFile(path string, ifModifiedSince string) (*fastFileInfo, error) {
 	if filepath.Ext(path) == "" {
 		return nil, errors.New("missing file extension; cannot serve directory")
 	}

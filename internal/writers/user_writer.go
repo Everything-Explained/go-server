@@ -41,7 +41,7 @@ type userWriter struct {
 }
 
 func (u *userWriter) AddUser(isRed33m bool) string {
-	var userState byte = 0
+	var userState byte
 	if isRed33m {
 		userState = 1
 	}
@@ -117,7 +117,7 @@ func (u *userWriter) saveUsers(saveDelay uint16) {
 
 		u.Lock()
 		for k, v := range u.users {
-			sb.WriteString(fmt.Sprintf("%s: %d\n", k, v))
+			_, _ = sb.WriteString(fmt.Sprintf("%s: %d\n", k, v))
 		}
 		u.fileWriter.WriteString(sb.String(), false)
 		lastWriteMilli = u.lastSavedMilli
@@ -141,7 +141,7 @@ func parseUsers(filePath string) map[string]byte {
 	// string: byte\n
 	//
 	userArray := strings.Split(strings.TrimSpace(string(f)), "\n")
-	for i := 0; i < len(userArray); i++ {
+	for i := range userArray {
 		userData := strings.Split(userArray[i], ": ")
 		userAccess, err := strconv.Atoi(userData[1])
 		if err != nil {
