@@ -128,7 +128,7 @@ func GetContextValue[T any](key any, r *http.Request) (T, error) {
 
 /*
 ReadBody reads and returns the body of a request as a string and
-resets the request body so it can be read later.
+resets the request body so it can be read by other middleware.
 */
 func ReadBody(r *http.Request) string {
 	if r.Body == nil {
