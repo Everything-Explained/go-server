@@ -59,6 +59,7 @@ func LogRequests(statusCode int) router.Middleware {
 				ResponseWriter: w,
 				statusCode:     http.StatusOK,
 			}
+			body := router.ReadBody(req)
 
 			next.ServeHTTP(respWriterWrapper, req)
 
@@ -66,7 +67,6 @@ func LogRequests(statusCode int) router.Middleware {
 				return
 			}
 
-			body := router.ReadBody(req)
 			reqSpeed := fmt.Sprintf("%dµs", time.Now().UnixMicro()-now)
 
 			writers.Log.Info(
