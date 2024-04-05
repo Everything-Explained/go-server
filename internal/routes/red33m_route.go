@@ -21,13 +21,13 @@ func HandleRed33m(rt *router.Router, mw ...router.Middleware) {
 		agData := middleware.GetAuthGuardData(r)
 
 		if agData.IsRed33med {
-			router.HTTPError(w, "already logged in", http.StatusBadRequest)
+			http.Error(w, "already logged in", http.StatusBadRequest)
 			return
 		}
 
 		body := router.ReadBody(r)
 		if body == "" {
-			router.HTTPError(w, "missing body", http.StatusBadRequest)
+			http.Error(w, "missing body", http.StatusBadRequest)
 			return
 		}
 
@@ -36,7 +36,7 @@ func HandleRed33m(rt *router.Router, mw ...router.Middleware) {
 			[]byte(body),
 		)
 		if err != nil {
-			router.HTTPError(w, "invalid password", http.StatusUnauthorized)
+			http.Error(w, "invalid password", http.StatusUnauthorized)
 			return
 		}
 		writers.UserWriter.UpdateUser(agData.Id, true)
