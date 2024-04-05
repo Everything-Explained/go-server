@@ -100,7 +100,7 @@ func (r *Router) SetStaticRoute(
 		}
 
 		file := req.PathValue("file")
-		err := FileServer.ServeMaxCache(folderPath+"/"+file, rw)
+		err := FileServer.ServeFile(folderPath+"/"+file, rw, req, true)
 		if err != nil {
 			// TODO  Log error
 			panic(err)

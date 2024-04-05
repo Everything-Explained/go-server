@@ -18,7 +18,7 @@ func HandleIndex(r *router.Router, filePath string, mw ...router.Middleware) {
 			http.Error(rw, "Page Not Found", http.StatusNotFound)
 			return
 		}
-		err := router.FileServer.ServeNoCache(filePath, rw, req)
+		err := router.FileServer.ServeFile(filePath, rw, req, false)
 		if err != nil {
 			panic(err)
 		}

@@ -51,15 +51,16 @@ type fileServer struct{}
 var FileServer = &fileServer{}
 
 /*
-ServeNoCache serves a file with all the appropriate headers, including
-a "Cache-Control" no-cache. A 304 response will be given if the file
-has not been modified since it was last retrieved, assuming the
-request contains the "If-Modified-Since" header.
+ServeFile serves a file with all the appropriate headers. Setting "withCache"
+to true will set Cache-Control to a long public max-age and false will set it
+to no-cache. 304 responses are handled with the "Last-Modified" and
+"If-Modified-Since" headers.
 */
-func (ffs fileServer) ServeNoCache(
+func (ffs fileServer) ServeFile(
 	filePath string,
 	rw http.ResponseWriter,
 	req *http.Request,
+	withCache bool,
 ) error {
 	ff, err := ffs.getFastFile(filePath, req.Header.Get("If-Modified-Since"))
 	if err != nil {
@@ -74,57 +75,27 @@ func (ffs fileServer) ServeNoCache(
 	h.Add("Date", internal.GetGMTFrom(time.Now()))
 	h.Add("Last-Modified", ff.LastModified)
 
+	cc := "public, no-cache"
+	if withCache {
+		cc = fmt.Sprintf("public, max-age=%d", longMaxAge)
+	}
+	h.Add("Cache-Control", cc)
+
 	if !ff.IsModified {
 		rw.WriteHeader(http.StatusNotModified)
 		return nil
 	}
 
-	addHeaders(h, map[string]string{
-		"Cache-Control":          "public, no-cache",
-		"Content-Type":           ff.ContentType,
-		"Content-Length":         strconv.Itoa(ff.Length),
-		"X-Content-Type-Options": "nosniff",
-		"X-Frame-Options":        "DENY",
-	})
+	h.Add("Content-Type", ff.ContentType)
+	h.Add("Content-Length", strconv.Itoa(ff.Length))
+	h.Add("X-Content-Type-Options", "nosniff")
+	h.Add("X-Frame-Options", "DENY")
 
 	_, err = rw.Write(ff.Content)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-/*
-ServeMaxCache serves a file with all the appropriate headers, including
-a "Cache-Control" max-age of longMaxAge (6 months as of this comment)
-
-🟡 This is for routes that have a cache-busting strategy on
-the client side, usually through query params.
-*/
-func (ffs fileServer) ServeMaxCache(filePath string, rw http.ResponseWriter) error {
-	ff, err := ffs.getFastFile(filePath, "")
-	if err != nil {
-		if os.IsNotExist(err) {
-			http.Error(rw, "File Not Found", http.StatusNotFound)
-			return nil
-		}
-		return err
-	}
-
-	addHeaders(rw.Header(), map[string]string{
-		"Date":                   internal.GetGMTFrom(time.Now()),
-		"Cache-Control":          fmt.Sprintf("public, max-age=%d", longMaxAge),
-		"Content-Type":           ff.ContentType,
-		"X-Content-Type-Options": "nosniff",
-		"X-Frame-Options":        "DENY",
-		"Content-Length":         strconv.Itoa(ff.Length),
-	})
-
-	_, err = rw.Write(ff.Content)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -289,10 +260,4 @@ func loadFileInfo(filePath string, ifModSince string) (*fastFileInfo, error) {
 	}
 
 	return fi, nil
-}
-
-func addHeaders(h http.Header, headers map[string]string) {
-	for k, v := range headers {
-		h.Add(k, v)
-	}
 }

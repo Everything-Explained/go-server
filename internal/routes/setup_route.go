@@ -61,7 +61,7 @@ func getSetupHandler() http.HandlerFunc {
 // TODO  Return error and log it as server error
 func sendVersionFile(w http.ResponseWriter, r *http.Request) {
 	versionFile := configs.GetConfig().DataPath + "/versions.json"
-	err := router.FileServer.ServeNoCache(versionFile, w, r)
+	err := router.FileServer.ServeFile(versionFile, w, r, false)
 	if err != nil {
 		panic(err)
 	}
