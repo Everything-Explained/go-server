@@ -22,17 +22,11 @@ func init() {
 type responseWrapper struct {
 	http.ResponseWriter
 	statusCode int
-	written    []byte
 }
 
 func (w *responseWrapper) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
 	w.statusCode = statusCode
-}
-
-func (w *responseWrapper) Write(b []byte) (int, error) {
-	w.written = b
-	return w.ResponseWriter.Write(b)
 }
 
 /*
@@ -73,19 +67,17 @@ func LogRequests(statusCode int) router.Middleware {
 			}
 
 			body := router.GetBody(req)
-			writtenResp := string(respWriterWrapper.written)
 			reqSpeed := fmt.Sprintf("%dµs", time.Now().UnixMicro()-now)
 
 			writers.Log.Info(
 				logName,
 				agent,
+				country,
 				req.Method,
 				host,
-				country,
 				url.Path,
 				query,
 				body,
-				writtenResp,
 				respWriterWrapper.statusCode,
 				reqSpeed,
 			)
