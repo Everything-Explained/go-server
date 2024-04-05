@@ -12,7 +12,7 @@ tidy: vet
 	go mod tidy
 
 build: tidy
-	go build -o server.exe
+	go build -o "bin/server.exe" "cmd/server/main.go"
 
 lint:
 	perfsprint --fix ./...
