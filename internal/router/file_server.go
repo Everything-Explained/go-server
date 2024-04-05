@@ -70,22 +70,21 @@ func (ffs fileServer) ServeNoCache(
 		return err
 	}
 
-	headers := make(map[string]string, 5)
-	headers["Date"] = internal.GetGMTFrom(time.Now())
-	headers["Last-Modified"] = ff.LastModified
+	rw.Header().Add("Date", internal.GetGMTFrom(time.Now()))
+	rw.Header().Add("Last-Modified", ff.LastModified)
 
 	if !ff.IsModified {
-		addHeaders(rw, headers)
 		rw.WriteHeader(http.StatusNotModified)
 		return nil
 	}
 
-	headers["Cache-Control"] = "public, no-cache"
-	headers["Content-Type"] = ff.ContentType
-	headers["Content-Length"] = strconv.Itoa(ff.Length)
-	headers["X-Content-Type-Options"] = "nosniff"
-	headers["X-Frame-Options"] = "DENY"
-	addHeaders(rw, headers)
+	addHeaders(rw, map[string]string{
+		"Cache-Control":          "public, no-cache",
+		"Content-Type":           ff.ContentType,
+		"Content-Length":         strconv.Itoa(ff.Length),
+		"X-Content-Type-Options": "nosniff",
+		"X-Frame-Options":        "DENY",
+	})
 
 	_, err = rw.Write(ff.Content)
 	if err != nil {
