@@ -12,6 +12,7 @@ import (
 const (
 	logFolderPath string = "./logs"
 	separator     string = "<|>"
+	newLineChar   string = "\u200B"
 )
 
 type LogLevel byte
@@ -84,5 +85,13 @@ func buildLog(messages ...any) string {
 	for _, msg := range messages {
 		_, _ = sb.WriteString(fmt.Sprintf("%s%v", separator, msg))
 	}
-	return sb.String()
+	s := sb.String()
+	if strings.Contains(s, "\r\n") {
+		return strings.ReplaceAll(s, "\r\n", newLineChar)
+	}
+
+	if strings.Contains(s, "\n") {
+		return strings.ReplaceAll(s, "\n", newLineChar)
+	}
+	return s
 }
