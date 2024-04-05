@@ -1,15 +1,13 @@
 package router
 
 import (
-	"context"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/Everything-Explained/go-server/internal"
 )
 
 type Method string
@@ -22,8 +20,6 @@ const (
 	PATCH  Method = "PATCH "
 	DELETE Method = "DELETE "
 )
-
-var reqBodyKey = &internal.ContextKey{Name: "body"}
 
 func NewRouter() *Router {
 	sx := http.NewServeMux()
@@ -130,12 +126,27 @@ func GetContextValue[T any](key any, r *http.Request) (T, error) {
 	return v, nil
 }
 
-func GetBody(r *http.Request) string {
-	body, ok := r.Context().Value(reqBodyKey).(string)
-	if !ok {
-		panic("request is missing 'body' context")
+/*
+ReadBody reads and returns the body of a request as a string and
+resets the request body so it can be read later.
+*/
+func ReadBody(r *http.Request) string {
+	if r.Body == nil {
+		return ""
 	}
-	return body
+
+	b := &bytes.Buffer{}
+	tReader := io.TeeReader(r.Body, b)
+
+	body, err := io.ReadAll(tReader)
+	if err != nil {
+		panic(err)
+	}
+
+	// Reset body
+	r.Body = io.NopCloser(b)
+
+	return strings.TrimSpace(string(body))
 }
 
 func (r *Router) createHandler(
@@ -162,29 +173,12 @@ func (r *Router) createHandler(
 
 	if chain != nil {
 		r.Handler.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			reqWithBody := r.WithContext(
-				context.WithValue(r.Context(), reqBodyKey, readBody(r)),
-			)
-			chain(handler).ServeHTTP(w, reqWithBody)
+			chain(handler).ServeHTTP(w, r)
 		})
 		return
 	}
 
 	r.Handler.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-		reqWithBody := r.WithContext(context.WithValue(r.Context(), reqBodyKey, readBody(r)))
-		handler.ServeHTTP(w, reqWithBody)
+		handler.ServeHTTP(w, r)
 	})
-}
-
-func readBody(r *http.Request) string {
-	if r.Body == nil {
-		return ""
-	}
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	return strings.TrimSpace(string(body))
 }

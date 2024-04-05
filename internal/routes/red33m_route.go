@@ -27,7 +27,7 @@ func HandleRed33m(r *router.Router, mw ...router.Middleware) {
 			return
 		}
 
-		body := router.GetBody(r)
+		body := router.ReadBody(r)
 		if body == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "missing body")

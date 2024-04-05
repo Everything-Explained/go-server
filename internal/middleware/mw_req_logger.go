@@ -66,7 +66,7 @@ func LogRequests(statusCode int) router.Middleware {
 				return
 			}
 
-			body := router.GetBody(req)
+			body := router.ReadBody(req)
 			reqSpeed := fmt.Sprintf("%dµs", time.Now().UnixMicro()-now)
 
 			writers.Log.Info(
