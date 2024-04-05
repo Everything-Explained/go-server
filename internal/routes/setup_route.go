@@ -28,7 +28,7 @@ func getSetupHandler() http.HandlerFunc {
 		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 
 		if authHeader == "" || !strings.Contains(authHeader, "Bearer ") {
-			w.WriteHeader(http.StatusForbidden)
+			router.HTTPError(w, "Malformed Authorization", http.StatusForbidden)
 			return
 		}
 
@@ -44,7 +44,7 @@ func getSetupHandler() http.HandlerFunc {
 		state, err := writers.UserWriter.GetUserState(id)
 		if err != nil {
 			// Client should try to get a new ID
-			w.WriteHeader(http.StatusUnauthorized)
+			router.HTTPError(w, "Authorization Expired or Missing", http.StatusUnauthorized)
 			return
 		}
 
@@ -58,6 +58,7 @@ func getSetupHandler() http.HandlerFunc {
 	}
 }
 
+// TODO  Return error and log it as server error
 func sendVersionFile(w http.ResponseWriter, r *http.Request) {
 	versionFile := configs.GetConfig().DataPath + "/versions.json"
 	err := router.FileServer.ServeNoCache(versionFile, w, r)

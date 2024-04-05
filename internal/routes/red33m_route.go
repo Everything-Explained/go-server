@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Everything-Explained/go-server/configs"
@@ -17,20 +16,18 @@ red33m content.
 
 🟠 Requires the auth guard middleware.
 */
-func HandleRed33m(r *router.Router, mw ...router.Middleware) {
-	r.Post("/red33m", func(w http.ResponseWriter, r *http.Request) {
+func HandleRed33m(rt *router.Router, mw ...router.Middleware) {
+	rt.Post("/red33m", func(w http.ResponseWriter, r *http.Request) {
 		agData := middleware.GetAuthGuardData(r)
 
 		if agData.IsRed33med {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "already logged in")
+			router.HTTPError(w, "already logged in", http.StatusBadRequest)
 			return
 		}
 
 		body := router.ReadBody(r)
 		if body == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "missing body")
+			router.HTTPError(w, "missing body", http.StatusBadRequest)
 			return
 		}
 
@@ -39,8 +36,7 @@ func HandleRed33m(r *router.Router, mw ...router.Middleware) {
 			[]byte(body),
 		)
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintf(w, "invalid password")
+			router.HTTPError(w, "invalid password", http.StatusUnauthorized)
 			return
 		}
 		writers.UserWriter.UpdateUser(agData.Id, true)

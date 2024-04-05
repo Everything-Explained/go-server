@@ -95,7 +95,7 @@ func (r *Router) SetStaticRoute(
 
 	r.Get(route+"/{file}", func(rw http.ResponseWriter, req *http.Request) {
 		if !strings.Contains(req.URL.Path, ".") {
-			rw.WriteHeader(http.StatusNotFound)
+			HTTPError(rw, "File Not Found", http.StatusNotFound)
 			return
 		}
 
@@ -116,6 +116,14 @@ func (r *Router) ListenAndServe(addr string, port int) error {
 		Handler:      r.Handler,
 	}
 	return s.ListenAndServe()
+}
+
+/*
+HTTPError does the same thing as http.Error() without the logging.
+*/
+func HTTPError(rw http.ResponseWriter, msg string, statusCode int) {
+	rw.WriteHeader(statusCode)
+	fmt.Fprint(rw, msg)
 }
 
 func GetContextValue[T any](key any, r *http.Request) (T, error) {

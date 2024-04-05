@@ -30,14 +30,14 @@ func AuthGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			w.WriteHeader(http.StatusUnauthorized)
+			router.HTTPError(w, "Malformed Authorization", http.StatusUnauthorized)
 			return
 		}
 
 		id := strings.TrimPrefix(authHeader, "Bearer ")
 		userState, err := writers.UserWriter.GetUserState(id)
 		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
+			router.HTTPError(w, "Bad User", http.StatusForbidden)
 			return
 		}
 

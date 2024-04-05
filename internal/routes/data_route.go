@@ -40,7 +40,7 @@ func getSummaryDataHandler() http.HandlerFunc {
 
 		// Only supports non-file requests
 		if strings.Contains(visibility, ".") || notRed33med {
-			w.WriteHeader(http.StatusNotFound)
+			router.HTTPError(w, "File Not Found", http.StatusNotFound)
 			return
 		}
 
@@ -63,7 +63,7 @@ func getMDHTMLHandler() http.HandlerFunc {
 
 		// Only supports MDHTML files
 		if !strings.HasSuffix(file, ".mdhtml") || notRed33med {
-			w.WriteHeader(http.StatusNotFound)
+			router.HTTPError(w, "File Not Found", http.StatusNotFound)
 			return
 		}
 
