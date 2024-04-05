@@ -112,11 +112,12 @@ func (r *Router) SetStaticRoute(
 	}, mw...)
 }
 
-func (*Router) ListenAndServe(addr string, port int) error {
+func (r *Router) ListenAndServe(addr string, port int) error {
 	s := http.Server{
 		Addr:         fmt.Sprintf("%s:%d", addr, port),
 		ReadTimeout:  8 * time.Second,
 		WriteTimeout: 8 * time.Second,
+		Handler:      r.Handler,
 	}
 	return s.ListenAndServe()
 }
