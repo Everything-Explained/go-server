@@ -84,6 +84,7 @@ func (ffs fileServer) ServeNoCache(
 	headers["Content-Type"] = ff.ContentType
 	headers["Content-Length"] = strconv.Itoa(ff.Length)
 	headers["X-Content-Type-Options"] = "nosniff"
+	headers["X-Frame-Options"] = "DENY"
 	addHeaders(rw, headers)
 
 	_, err = rw.Write(ff.Content)
@@ -116,6 +117,7 @@ func (ffs fileServer) ServeMaxCache(filePath string, rw http.ResponseWriter) err
 		"Cache-Control":          fmt.Sprintf("public, max-age=%d", longMaxAge),
 		"Content-Type":           ff.ContentType,
 		"X-Content-Type-Options": "nosniff",
+		"X-Frame-Options":        "DENY",
 		"Content-Length":         strconv.Itoa(ff.Length),
 	})
 
