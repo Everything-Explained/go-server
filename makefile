@@ -8,7 +8,7 @@ fmt:
 vet: fmt
 	go vet ./...
 
-tidy: fmt
+tidy: vet
 	go mod tidy
 
 build: tidy
