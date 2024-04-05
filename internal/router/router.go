@@ -123,7 +123,10 @@ HTTPError does the same thing as http.Error() without the logging.
 */
 func HTTPError(rw http.ResponseWriter, msg string, statusCode int) {
 	rw.WriteHeader(statusCode)
-	fmt.Fprint(rw, msg)
+	_, err := fmt.Fprint(rw, msg)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func GetContextValue[T any](key any, r *http.Request) (T, error) {
