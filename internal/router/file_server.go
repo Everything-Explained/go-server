@@ -70,15 +70,16 @@ func (ffs fileServer) ServeNoCache(
 		return err
 	}
 
-	rw.Header().Add("Date", internal.GetGMTFrom(time.Now()))
-	rw.Header().Add("Last-Modified", ff.LastModified)
+	h := rw.Header()
+	h.Add("Date", internal.GetGMTFrom(time.Now()))
+	h.Add("Last-Modified", ff.LastModified)
 
 	if !ff.IsModified {
 		rw.WriteHeader(http.StatusNotModified)
 		return nil
 	}
 
-	addHeaders(rw, map[string]string{
+	addHeaders(h, map[string]string{
 		"Cache-Control":          "public, no-cache",
 		"Content-Type":           ff.ContentType,
 		"Content-Length":         strconv.Itoa(ff.Length),
@@ -111,7 +112,7 @@ func (ffs fileServer) ServeMaxCache(filePath string, rw http.ResponseWriter) err
 		return err
 	}
 
-	addHeaders(rw, map[string]string{
+	addHeaders(rw.Header(), map[string]string{
 		"Date":                   internal.GetGMTFrom(time.Now()),
 		"Cache-Control":          fmt.Sprintf("public, max-age=%d", longMaxAge),
 		"Content-Type":           ff.ContentType,
@@ -290,8 +291,8 @@ func loadFileInfo(filePath string, ifModSince string) (*fastFileInfo, error) {
 	return fi, nil
 }
 
-func addHeaders(rw http.ResponseWriter, headers map[string]string) {
+func addHeaders(h http.Header, headers map[string]string) {
 	for k, v := range headers {
-		rw.Header().Add(k, v)
+		h.Add(k, v)
 	}
 }
