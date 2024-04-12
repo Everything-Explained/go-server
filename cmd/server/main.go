@@ -13,7 +13,9 @@ func main() {
 	cfg := configs.GetConfig()
 
 	rootRouter := router.NewRouter()
-	routes.HandleAssets(rootRouter, middleware.LogRequests(http.StatusBadRequest))
+
+	assetDir := configs.GetConfig().ClientPath + "/assets"
+	routes.HandleAssets(rootRouter, assetDir, middleware.LogRequests(http.StatusBadRequest))
 	routes.HandleSetup(rootRouter, middleware.LogRequests(http.StatusBadRequest))
 	routes.HandleIndex(
 		rootRouter,
