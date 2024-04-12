@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Everything-Explained/go-server/configs"
 	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
 )
@@ -16,22 +15,21 @@ on the site (literature, videos, etc...)
 
 🟠 Requires the auth guard middleware.
 */
-func HandleData(r *router.Router, mw ...router.Middleware) {
+func HandleData(r *router.Router, dir string, mw ...router.Middleware) {
 	r.Get(
 		"/data/{content}/{visibility}",
-		getSummaryDataHandler(),
+		getSummaryDataHandler(dir),
 		mw...,
 	)
 
 	r.Get(
 		"/data/{content}/{visibility}/{file}",
-		getMDHTMLHandler(),
+		getMDHTMLHandler(dir),
 		mw...,
 	)
 }
 
-func getSummaryDataHandler() http.HandlerFunc {
-	dataPath := configs.GetConfig().DataPath
+func getSummaryDataHandler(dataPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		agData := middleware.GetAuthGuardData(r)
 		content := r.PathValue("content")
@@ -52,8 +50,7 @@ func getSummaryDataHandler() http.HandlerFunc {
 	}
 }
 
-func getMDHTMLHandler() http.HandlerFunc {
-	dataPath := configs.GetConfig().DataPath
+func getMDHTMLHandler(dataPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		agData := middleware.GetAuthGuardData(r)
 		content := r.PathValue("content")

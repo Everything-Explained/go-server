@@ -25,7 +25,8 @@ func main() {
 
 	authRouter := router.NewRouter()
 	routes.HandleRed33m(authRouter)
-	routes.HandleData(authRouter)
+	dataPath := configs.GetConfig().DataPath
+	routes.HandleData(authRouter, dataPath)
 
 	router.AddSubRoute(
 		"/authed",
