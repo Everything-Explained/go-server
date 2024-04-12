@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -80,10 +81,8 @@ func (r *Router) SetStaticRoute(
 	folderPath string,
 	mw ...Middleware,
 ) {
-	if strings.Contains(folderPath, ".") {
-		panic(
-			fmt.Sprintf("you provided a file path '%s' instead of a folder path.", folderPath),
-		)
+	if filepath.Ext(folderPath) != "" {
+		panic(fmt.Errorf("you provided a file path '%s' instead of a folder path", folderPath))
 	}
 
 	if _, err := os.Stat(folderPath); err != nil {
