@@ -14,16 +14,16 @@ import (
 
 var userFile string = internal.Getwd() + "/users.txt"
 
-var user *userWriter
+var user *UserWriter
 
-func User() *userWriter {
+func User() *UserWriter {
 	if user == nil {
 		f, err := os.OpenFile(userFile, os.O_WRONLY|os.O_CREATE, 0o644)
 		if err != nil {
 			panic(err)
 		}
 
-		user = &userWriter{
+		user = &UserWriter{
 			fileWriter: NewFileWriter(f),
 			users:      parseUsers(userFile),
 			resumeCh:   make(chan bool, 1),
@@ -35,7 +35,7 @@ func User() *userWriter {
 	return user
 }
 
-type userWriter struct {
+type UserWriter struct {
 	sync.Mutex
 	fileWriter     *FileWriter
 	resumeCh       chan bool
@@ -44,7 +44,7 @@ type userWriter struct {
 	lastSavedMilli int64
 }
 
-func (u *userWriter) Add(isRed33m bool) string {
+func (u *UserWriter) Add(isRed33m bool) string {
 	var userState byte
 	if isRed33m {
 		userState = 1
@@ -62,7 +62,7 @@ func (u *userWriter) Add(isRed33m bool) string {
 	return newID
 }
 
-func (u *userWriter) GetState(userid string) (byte, error) {
+func (u *UserWriter) GetState(userid string) (byte, error) {
 	u.Lock()
 	userState, exists := u.users[userid]
 	u.Unlock()
@@ -74,7 +74,7 @@ func (u *userWriter) GetState(userid string) (byte, error) {
 	return userState, nil
 }
 
-func (u *userWriter) Update(userid string, isRed33m bool) {
+func (u *UserWriter) Update(userid string, isRed33m bool) {
 	var userState byte
 	if isRed33m {
 		userState = 1
@@ -90,7 +90,7 @@ func (u *userWriter) Update(userid string, isRed33m bool) {
 	u.Unlock()
 }
 
-func (u *userWriter) Close() {
+func (u *UserWriter) Close() {
 	close(u.fileWriter.ch)
 	u.fileWriter.wg.Wait()
 }
@@ -99,7 +99,7 @@ func (u *userWriter) Close() {
 saveRoutine saves users on a cycle, to allow concurrent writes to the user
 map without deadlocks.
 */
-func (u *userWriter) saveRoutine(saveDelay uint16) {
+func (u *UserWriter) saveRoutine(saveDelay uint16) {
 	if saveDelay < 30 {
 		panic("save delay must be at least 30 milliseconds")
 	}
