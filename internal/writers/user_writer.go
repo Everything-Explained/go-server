@@ -14,21 +14,25 @@ import (
 
 var userFile string = internal.Getwd() + "/users.txt"
 
-var UserWriter *userWriter
+var user *userWriter
 
-func init() {
-	f, err := os.OpenFile(userFile, os.O_WRONLY|os.O_CREATE, 0o644)
-	if err != nil {
-		panic(err)
+func User() *userWriter {
+	if user == nil {
+		f, err := os.OpenFile(userFile, os.O_WRONLY|os.O_CREATE, 0o644)
+		if err != nil {
+			panic(err)
+		}
+
+		user = &userWriter{
+			fileWriter: NewFileWriter(f),
+			users:      parseUsers(userFile),
+			resumeCh:   make(chan bool, 1),
+		}
+
+		go user.saveUsers(500)
 	}
 
-	UserWriter = &userWriter{
-		fileWriter: NewFileWriter(f),
-		users:      parseUsers(userFile),
-		resumeCh:   make(chan bool, 1),
-	}
-
-	go UserWriter.saveUsers(500)
+	return user
 }
 
 type userWriter struct {
