@@ -3,15 +3,12 @@ package internal
 import (
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/jaevor/go-nanoid"
 )
 
 var (
-	workingDir string
-	once       sync.Once
 	GetLongID  func() string
 	GetShortID func() string
 )
