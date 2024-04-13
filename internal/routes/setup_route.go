@@ -33,7 +33,7 @@ func getSetupHandler() http.HandlerFunc {
 		}
 
 		if authHeader == "Bearer setup" {
-			id := writers.UserWriter.AddUser(false)
+			id := writers.User().Add(false)
 			w.Header().Add("X-Evex-Id", id)
 			w.Header().Add("X-Evex-Red33m", "no")
 			sendVersionFile(w, r)
@@ -41,7 +41,7 @@ func getSetupHandler() http.HandlerFunc {
 		}
 
 		id := strings.TrimPrefix(authHeader, "Bearer ")
-		state, err := writers.UserWriter.GetUserState(id)
+		state, err := writers.User().GetState(id)
 		if err != nil {
 			// Client should try to get a new ID
 			http.Error(w, "Authorization Expired or Missing", http.StatusUnauthorized)

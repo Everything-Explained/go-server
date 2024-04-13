@@ -39,6 +39,6 @@ func HandleRed33m(rt *router.Router, mw ...router.Middleware) {
 			http.Error(w, "invalid password", http.StatusUnauthorized)
 			return
 		}
-		writers.UserWriter.UpdateUser(agData.Id, true)
+		writers.User().Update(agData.Id, true)
 	}, mw...)
 }

@@ -35,7 +35,7 @@ func AuthGuard(next http.Handler) http.Handler {
 		}
 
 		id := strings.TrimPrefix(authHeader, "Bearer ")
-		userState, err := writers.UserWriter.GetUserState(id)
+		userState, err := writers.User().GetState(id)
 		if err != nil {
 			http.Error(w, "Bad User", http.StatusForbidden)
 			return

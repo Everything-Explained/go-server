@@ -29,7 +29,7 @@ func User() *userWriter {
 			resumeCh:   make(chan bool, 1),
 		}
 
-		go user.saveUsers(500)
+		go user.saveRoutine(500)
 	}
 
 	return user
@@ -44,7 +44,7 @@ type userWriter struct {
 	lastSavedMilli int64
 }
 
-func (u *userWriter) AddUser(isRed33m bool) string {
+func (u *userWriter) Add(isRed33m bool) string {
 	var userState byte
 	if isRed33m {
 		userState = 1
@@ -62,9 +62,9 @@ func (u *userWriter) AddUser(isRed33m bool) string {
 	return newID
 }
 
-func (u *userWriter) GetUserState(id string) (byte, error) {
+func (u *userWriter) GetState(userid string) (byte, error) {
 	u.Lock()
-	userState, exists := u.users[id]
+	userState, exists := u.users[userid]
 	u.Unlock()
 
 	if !exists {
@@ -74,14 +74,14 @@ func (u *userWriter) GetUserState(id string) (byte, error) {
 	return userState, nil
 }
 
-func (u *userWriter) UpdateUser(id string, isRed33m bool) {
+func (u *userWriter) Update(userid string, isRed33m bool) {
 	var userState byte
 	if isRed33m {
 		userState = 1
 	}
 	u.Lock()
-	if _, exists := u.users[id]; exists {
-		u.users[id] = userState
+	if _, exists := u.users[userid]; exists {
+		u.users[userid] = userState
 		if u.isPaused {
 			u.isPaused = false
 			u.resumeCh <- true
@@ -96,10 +96,10 @@ func (u *userWriter) Close() {
 }
 
 /*
-saveUsers saves users on a cycle, to allow concurrent writes to the user
+saveRoutine saves users on a cycle, to allow concurrent writes to the user
 map without deadlocks.
 */
-func (u *userWriter) saveUsers(saveDelay uint16) {
+func (u *userWriter) saveRoutine(saveDelay uint16) {
 	if saveDelay < 30 {
 		panic("save delay must be at least 30 milliseconds")
 	}
