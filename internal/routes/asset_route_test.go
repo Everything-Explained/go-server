@@ -11,7 +11,10 @@ import (
 )
 
 func TestAssetRoute(t *testing.T) {
-	os.Chdir("../../../go-server")
+	err := os.Chdir("../../../go-server")
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 	t.Parallel()
 
 	r := router.NewRouter()
