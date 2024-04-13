@@ -2,6 +2,7 @@
 *.log
 users.txt
 npm-debug.log*
+logs
 
 # Private files
 *config.yml
