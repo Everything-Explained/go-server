@@ -56,7 +56,7 @@ func TestID(t *testing.T) {
 
 		if longLen-shortLen < 5 {
 			ex := "min distance between short & long IDs is 5"
-			testutils.PrintErrorD(ex, shortLen, longLen)
+			t.Error(testutils.PrintErrorD(ex, shortLen, longLen))
 		}
 	})
 }
