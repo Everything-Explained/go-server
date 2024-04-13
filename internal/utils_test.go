@@ -17,7 +17,10 @@ func TestWorkingDir(t *testing.T) {
 	})
 
 	t.Run("gets active working dir", func(t *testing.T) {
-		os.Chdir("../")
+		err := os.Chdir("../")
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
 		got := Getwd()
 		want, _ := os.Getwd()
 		if got != want {
