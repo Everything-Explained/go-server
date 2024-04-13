@@ -12,7 +12,7 @@ import (
 	"github.com/Everything-Explained/go-server/internal"
 )
 
-var userFile string = internal.GetWorkingDir() + "/users.txt"
+var userFile string = internal.Getwd() + "/users.txt"
 
 var UserWriter *userWriter
 

@@ -26,15 +26,19 @@ func init() {
 	GetShortID = shortIDFunc
 }
 
-func GetWorkingDir() string {
-	once.Do(func() {
-		wd, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-		workingDir = wd
-	})
-	return workingDir
+/*
+Getwd gets the working directory. Wraps the built-in os.Getwd()
+so we can just panic in the extremely rare case that it
+returns an error.
+
+🔴 Panics for any error returned by the os.Getwd().
+*/
+func Getwd() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	return wd
 }
 
 func GetISODateNow() string {

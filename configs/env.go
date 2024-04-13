@@ -16,7 +16,7 @@ type Environment struct {
 
 func GetEnv() Environment {
 	if env.ConfigFilePath == "" {
-		wd := internal.GetWorkingDir()
+		wd := internal.Getwd()
 		if err := godotenv.Load(wd + "/configs/.env.dev"); err != nil {
 			if err = godotenv.Load(wd + "/configs/.env.prod"); err != nil {
 				panic(err)
