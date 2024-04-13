@@ -1,6 +1,6 @@
 # Logs
 *.log
-*.txt
+users.txt
 npm-debug.log*
 
 # Private files
