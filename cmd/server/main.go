@@ -16,7 +16,11 @@ func main() {
 
 	assetDir := configs.GetConfig().ClientPath + "/assets"
 	routes.HandleAssets(rootRouter, assetDir, middleware.LogRequests(http.StatusBadRequest))
-	routes.HandleSetup(rootRouter, middleware.LogRequests(http.StatusBadRequest))
+	routes.HandleSetup(
+		rootRouter,
+		cfg.DataPath+"/versions.json",
+		middleware.LogRequests(http.StatusBadRequest),
+	)
 	routes.HandleIndex(
 		rootRouter,
 		cfg.ClientPath+"/index.html",

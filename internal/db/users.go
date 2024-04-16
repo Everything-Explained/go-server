@@ -99,11 +99,11 @@ func (u *Users) Clean() int {
 	u.Lock()
 	for k, v := range u.users {
 		if !v {
-			delCount += 1
+			delCount++
 			delete(u.users, k)
 			continue
 		}
-		sb.WriteString(fmt.Sprintf("%s: %d\n", k, 1))
+		_, _ = sb.WriteString(fmt.Sprintf("%s: %d\n", k, 1))
 	}
 	u.fileWriter.WriteString(sb.String(), false)
 	u.Unlock()
