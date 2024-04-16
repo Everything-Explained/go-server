@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/Everything-Explained/go-server/configs"
+	"github.com/Everything-Explained/go-server/internal/db"
 	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
-	"github.com/Everything-Explained/go-server/internal/writers"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -39,6 +39,6 @@ func HandleRed33m(rt *router.Router, mw ...router.Middleware) {
 			http.Error(w, "invalid password", http.StatusUnauthorized)
 			return
 		}
-		writers.User().Update(agData.Id, true)
+		db.GetUsers().Update(agData.Id, true)
 	}, mw...)
 }

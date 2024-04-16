@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/Everything-Explained/go-server/internal"
+	"github.com/Everything-Explained/go-server/internal/db"
 	"github.com/Everything-Explained/go-server/internal/router"
-	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
 var AuthGuardContextKey = &internal.ContextKey{Name: "auth"}
@@ -34,15 +34,16 @@ func AuthGuard(next http.Handler) http.Handler {
 			return
 		}
 
+		users := db.GetUsers()
 		id := strings.TrimPrefix(authHeader, "Bearer ")
-		userState, err := writers.User().GetState(id)
+		isRed33med, err := users.GetState(id)
 		if err != nil {
 			http.Error(w, "Bad User", http.StatusForbidden)
 			return
 		}
 
 		ctx := context.WithValue(r.Context(), AuthGuardContextKey, AuthGuardData{
-			IsRed33med: userState == 1,
+			IsRed33med: isRed33med,
 			HasAuth:    true,
 			Id:         id,
 		})
