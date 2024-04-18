@@ -10,15 +10,6 @@ import (
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
-const logName = "requests"
-
-func init() {
-	err := writers.NewLogWriter(logName)
-	if err != nil {
-		panic(err)
-	}
-}
-
 type responseWrapper struct {
 	http.ResponseWriter
 	statusCode int
@@ -34,6 +25,14 @@ LogRequests returns a middleware that logs all requests that respond
 with a status code less than the provided value.
 */
 func LogRequests(statusCode int) router.Middleware {
+	const logName = "requests"
+	if !writers.Log.Exists(logName) {
+		err := writers.NewLogWriter(logName)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			query := ""
