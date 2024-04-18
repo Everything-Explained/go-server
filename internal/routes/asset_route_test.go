@@ -6,16 +6,29 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Everything-Explained/go-server/internal"
 	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/testutils"
 )
 
 func TestAssetRoute(t *testing.T) {
-	err := os.Chdir("../../../go-server")
+	tempDir := t.TempDir()
+	wd := internal.Getwd()
+	err := os.Chdir(tempDir)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	t.Parallel()
+	defer os.Chdir(wd)
+
+	err = os.Mkdir("./mocks", 0o644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = os.WriteFile("./mocks/mock.txt", []byte("test text"), 0o644)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	r := router.NewRouter()
 	HandleAssets(r, "./mocks")
