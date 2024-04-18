@@ -7,19 +7,22 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Everything-Explained/go-server/internal"
 	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/testutils"
 )
 
 func TestIndexRoute(t *testing.T) {
-	err := os.Chdir("../../../go-server")
+	tempDir := t.TempDir()
+	wd := internal.Getwd()
+	err := os.Chdir(tempDir)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-
-	t.Parallel()
+	defer os.Chdir(wd)
 	r := router.NewRouter()
-	HandleIndex(r, "./mocks/mock.html")
+	os.WriteFile("mock.html", []byte("index text"), 0o644)
+	HandleIndex(r, "./mock.html")
 
 	resp := testutils.MockRequest(r.Handler, "GET", "/", nil)
 
