@@ -21,8 +21,8 @@ func (w *responseWrapper) WriteHeader(statusCode int) {
 }
 
 /*
-LogRequests returns a middleware that logs all requests that respond
-with a status code less than the provided value.
+LogRequests returns a middleware that logs all requests which respond
+with a status code greater than or equal to the provided statusCode.
 */
 func LogRequests(statusCode int) router.Middleware {
 	const logName = "requests"
