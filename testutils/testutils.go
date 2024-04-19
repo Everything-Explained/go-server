@@ -49,17 +49,17 @@ returned function.
 func SetTempDir(t *testing.T) func() {
 	oldDir, err := os.Getwd()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	tmpDir := t.TempDir()
 	err = os.Chdir(tmpDir)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	return func() {
 		err := os.Chdir(oldDir)
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 	}
 }
