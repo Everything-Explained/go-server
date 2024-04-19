@@ -25,7 +25,7 @@ func MockRequest(
 
 // PrintErrorS returns a string formatted for simple test errors
 func PrintErrorS(want any, got any) string {
-	return fmt.Sprintf("\n\t(WANT= %v) \n\t(GOT= %v)", want, got)
+	return fmt.Sprintf("\n\t(WANT= %v) \n\t( GOT= %v)", want, got)
 }
 
 /*
