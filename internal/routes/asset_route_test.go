@@ -6,26 +6,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Everything-Explained/go-server/internal"
 	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/testutils"
 )
 
 func TestAssetRoute(t *testing.T) {
-	tempDir := t.TempDir()
-	wd := internal.Getwd()
-	err := os.Chdir(tempDir)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-	defer func() {
-		err := os.Chdir(wd)
-		if err != nil {
-			t.Fatalf("Unexpected error: %s", err)
-		}
-	}()
+	reset := testutils.SetTempDir(t)
+	defer reset()
 
-	err = os.Mkdir("./mocks", 0o644)
+	err := os.Mkdir("./mocks", 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
