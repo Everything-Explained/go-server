@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -124,6 +125,22 @@ func (u *Users) GetState(userid string) (bool, error) {
 
 func (u *Users) GetLength() int {
 	return len(u.users)
+}
+
+func (u *Users) GetRandomUserId() (string, error) {
+	randIdx := rand.Intn(len(u.users))
+	count := 0
+	for k := range u.users {
+		if count == randIdx {
+			return k, nil
+		}
+		count++
+	}
+	return "", fmt.Errorf(
+		"invalid range::user length: %d, random index: %d",
+		len(u.users),
+		randIdx,
+	)
 }
 
 /*
