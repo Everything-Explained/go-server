@@ -30,7 +30,7 @@ func TestAssetRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = os.WriteFile("./mocks/mock.txt", []byte("test text"), 0o644)
+	err = os.WriteFile("./mocks/mock.txt", []byte("test text"), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}

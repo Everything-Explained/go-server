@@ -26,7 +26,7 @@ func TestIndexRoute(t *testing.T) {
 		}
 	}()
 	r := router.NewRouter()
-	err = os.WriteFile("mock.html", []byte("index text"), 0o644)
+	err = os.WriteFile("mock.html", []byte("index text"), 0o600)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
