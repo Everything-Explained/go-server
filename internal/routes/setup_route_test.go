@@ -53,7 +53,6 @@ func TestSetupRoute(t *testing.T) {
 			if resp.Body.String() != expBody {
 				t.Error(testutils.PrintErrorS(expBody, resp.Body.String()))
 			}
-
 		}
 	})
 
