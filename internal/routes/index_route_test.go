@@ -19,9 +19,17 @@ func TestIndexRoute(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	defer os.Chdir(wd)
+	defer func() {
+		err := os.Chdir(wd)
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+	}()
 	r := router.NewRouter()
-	os.WriteFile("mock.html", []byte("index text"), 0o644)
+	err = os.WriteFile("mock.html", []byte("index text"), 0o644)
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 	HandleIndex(r, "./mock.html")
 
 	resp := testutils.MockRequest(r.Handler, "GET", "/", nil)
