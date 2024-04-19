@@ -18,7 +18,12 @@ func TestAssetRoute(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	defer os.Chdir(wd)
+	defer func() {
+		err := os.Chdir(wd)
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+	}()
 
 	err = os.Mkdir("./mocks", 0o644)
 	if err != nil {
