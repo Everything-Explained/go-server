@@ -128,7 +128,7 @@ func (u *Users) GetLength() int {
 }
 
 func (u *Users) GetRandomUserId() (string, error) {
-	randIdx := rand.Intn(len(u.users))
+	randIdx := rand.Intn(len(u.users)) // #nosec G404 -- not applicable
 	count := 0
 	for k := range u.users {
 		if count == randIdx {
