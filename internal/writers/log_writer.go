@@ -33,7 +33,7 @@ NewLogWriter initializes a new log file with the specified name.
 */
 func NewLogWriter(name string) error {
 	if _, exists := logs[name]; exists {
-		return fmt.Errorf("log name (%s) already exists", name)
+		return nil
 	}
 
 	err := os.MkdirAll(logFolderPath, 0o755)

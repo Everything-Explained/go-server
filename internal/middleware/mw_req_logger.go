@@ -26,11 +26,9 @@ with a status code greater than or equal to the provided statusCode.
 */
 func LogRequests(statusCode int) router.Middleware {
 	const logName = "requests"
-	if !writers.Log.Exists(logName) {
-		err := writers.NewLogWriter(logName)
-		if err != nil {
-			panic(err)
-		}
+	err := writers.NewLogWriter(logName)
+	if err != nil {
+		panic(err)
 	}
 
 	return func(next http.Handler) http.Handler {
