@@ -213,7 +213,7 @@ func saveRoutine(saveDelay uint16) {
 func parseUsers(path string) (map[string]bool, error) {
 	f, err := os.ReadFile(path)
 	if err != nil {
-		return map[string]bool{}, err
+		return make(map[string]bool), err
 	}
 
 	users := make(map[string]bool)
@@ -229,7 +229,7 @@ func parseUsers(path string) (map[string]bool, error) {
 		userData := strings.Split(userArray[i], ": ")
 		userAccess, err := strconv.Atoi(userData[1])
 		if err != nil {
-			return map[string]bool{}, err
+			return make(map[string]bool), err
 		}
 		users[userData[0]] = byte(userAccess) == 1
 	}
