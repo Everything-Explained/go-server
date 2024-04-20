@@ -19,8 +19,13 @@ func TestSetupRoute(t *testing.T) {
 	reset := testutils.SetTempDir(t)
 	defer reset()
 
+	err := db.CreateUsers(internal.Getwd())
+	if err != nil {
+		panic(err)
+	}
+
 	r := router.NewRouter()
-	err := os.WriteFile("mock.txt", []byte("test text"), 0o600)
+	err = os.WriteFile("mock.txt", []byte("test text"), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}

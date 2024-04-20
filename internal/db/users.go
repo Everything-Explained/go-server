@@ -14,27 +14,41 @@ import (
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
-var (
-	users *Users
-	once  sync.Once
-)
+var users *Users
 
-func GetUsers() *Users {
-	once.Do(func() {
-		var usersFile string = internal.Getwd() + "/users.txt"
-		f, err := os.OpenFile(usersFile, os.O_WRONLY|os.O_CREATE, 0o644)
+/*
+CreateUsers initializes the users database at the specified
+directory. This function can only be effectively called
+once, since it initializes a singleton.
+
+📝 Subsequent calls to CreateUsers() are effectively ignored.
+*/
+func CreateUsers(dir string) error {
+	if users == nil {
+		filePath := dir + "/users.txt"
+		f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0o644)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("file error::%s", err)
 		}
 
 		go saveRoutine(500)
 
+		parsedUsers, err := parseUsers(filePath)
+		if err != nil {
+			return fmt.Errorf("user parse error::%s", err)
+		}
+
 		users = &Users{
-			users:      parseUsers(usersFile),
+			users:      parsedUsers,
 			fileWriter: writers.NewFileWriter(f),
 			resumeCh:   make(chan bool, 1),
 		}
-	})
+	}
+	return nil
+}
+
+func GetUsers() *Users {
+	checkIfCreated()
 	return users
 }
 
@@ -55,12 +69,14 @@ the users struct.
 closed will cause unexpected behavior.
 */
 func (u *Users) Close() {
+	checkIfCreated()
 	close(u.fileWriter.Channel)
 	close(u.resumeCh)
 	u.fileWriter.WaitGroup.Wait()
 }
 
 func (u *Users) Add(isRed33m bool) string {
+	checkIfCreated()
 	var red33mState bool
 	if isRed33m {
 		red33mState = true
@@ -79,6 +95,7 @@ func (u *Users) Add(isRed33m bool) string {
 }
 
 func (u *Users) Update(userid string, isRed33m bool) {
+	checkIfCreated()
 	var red33mState bool
 	if isRed33m {
 		red33mState = true
@@ -95,6 +112,7 @@ func (u *Users) Update(userid string, isRed33m bool) {
 }
 
 func (u *Users) Clean() int {
+	checkIfCreated()
 	delCount := 0
 	var sb strings.Builder
 	u.Lock()
@@ -112,6 +130,7 @@ func (u *Users) Clean() int {
 }
 
 func (u *Users) GetState(userid string) (bool, error) {
+	checkIfCreated()
 	u.Lock()
 	userState, exists := u.users[userid]
 	u.Unlock()
@@ -124,10 +143,12 @@ func (u *Users) GetState(userid string) (bool, error) {
 }
 
 func (u *Users) GetLength() int {
+	checkIfCreated()
 	return len(u.users)
 }
 
 func (u *Users) GetRandomUserId() (string, error) {
+	checkIfCreated()
 	randIdx := rand.Intn(len(u.users)) // #nosec G404 -- not applicable
 	count := 0
 	for k := range u.users {
@@ -141,6 +162,12 @@ func (u *Users) GetRandomUserId() (string, error) {
 		len(u.users),
 		randIdx,
 	)
+}
+
+func checkIfCreated() {
+	if users == nil {
+		panic("users not initialized; did you forget to create it?")
+	}
 }
 
 /*
@@ -183,15 +210,15 @@ func saveRoutine(saveDelay uint16) {
 	}
 }
 
-func parseUsers(filePath string) map[string]bool {
-	f, err := os.ReadFile(filePath)
+func parseUsers(path string) (map[string]bool, error) {
+	f, err := os.ReadFile(path)
 	if err != nil {
-		panic(err)
+		return map[string]bool{}, err
 	}
 
 	users := make(map[string]bool)
 	if len(f) == 0 {
-		return users
+		return users, nil
 	}
 
 	// === File Format ===
@@ -202,10 +229,10 @@ func parseUsers(filePath string) map[string]bool {
 		userData := strings.Split(userArray[i], ": ")
 		userAccess, err := strconv.Atoi(userData[1])
 		if err != nil {
-			panic(err)
+			return map[string]bool{}, err
 		}
 		users[userData[0]] = byte(userAccess) == 1
 	}
 
-	return users
+	return users, nil
 }
