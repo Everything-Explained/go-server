@@ -26,28 +26,29 @@ func GetAuthGuardData(r *http.Request) AuthGuardData {
 	return data
 }
 
-func AuthGuard(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "Malformed Authorization", http.StatusUnauthorized)
-			return
-		}
+func AuthGuard(u *db.Users) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+				http.Error(w, "Malformed Authorization", http.StatusUnauthorized)
+				return
+			}
 
-		users := db.GetUsers()
-		id := strings.TrimPrefix(authHeader, "Bearer ")
-		isRed33med, err := users.GetState(id)
-		if err != nil {
-			http.Error(w, "Bad User", http.StatusForbidden)
-			return
-		}
+			id := strings.TrimPrefix(authHeader, "Bearer ")
+			isRed33med, err := u.GetState(id)
+			if err != nil {
+				http.Error(w, "Bad User", http.StatusForbidden)
+				return
+			}
 
-		ctx := context.WithValue(r.Context(), AuthGuardContextKey, AuthGuardData{
-			IsRed33med: isRed33med,
-			HasAuth:    true,
-			Id:         id,
+			ctx := context.WithValue(r.Context(), AuthGuardContextKey, AuthGuardData{
+				IsRed33med: isRed33med,
+				HasAuth:    true,
+				Id:         id,
+			})
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+	}
 }

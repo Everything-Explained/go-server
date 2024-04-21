@@ -14,7 +14,7 @@ import (
 func main() {
 	cfg := configs.GetConfig()
 
-	err := db.CreateUsers(internal.Getwd())
+	u, err := db.NewUsers(internal.Getwd())
 	if err != nil {
 		panic(err)
 	}
@@ -26,8 +26,10 @@ func main() {
 	routes.HandleSetup(
 		rootRouter,
 		cfg.DataPath+"/versions.json",
+		u,
 		middleware.LogRequests(http.StatusBadRequest),
 	)
+
 	routes.HandleIndex(
 		rootRouter,
 		cfg.ClientPath+"/index.html",
@@ -35,7 +37,7 @@ func main() {
 	)
 
 	authRouter := router.NewRouter()
-	routes.HandleRed33m(authRouter)
+	routes.HandleRed33m(authRouter, u)
 	dataPath := configs.GetConfig().DataPath
 	routes.HandleData(authRouter, dataPath)
 
@@ -44,7 +46,7 @@ func main() {
 		rootRouter,
 		authRouter,
 		middleware.LogRequests(http.StatusBadRequest),
-		middleware.AuthGuard,
+		middleware.AuthGuard(u),
 	)
 
 	err = rootRouter.ListenAndServe("127.0.0.1", cfg.Port)

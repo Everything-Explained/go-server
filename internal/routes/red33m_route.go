@@ -16,7 +16,7 @@ red33m content.
 
 🟠 Requires the auth guard middleware.
 */
-func HandleRed33m(rt *router.Router, mw ...router.Middleware) {
+func HandleRed33m(rt *router.Router, u *db.Users, mw ...router.Middleware) {
 	rt.Post("/red33m", func(w http.ResponseWriter, r *http.Request) {
 		agData := middleware.GetAuthGuardData(r)
 
@@ -39,6 +39,6 @@ func HandleRed33m(rt *router.Router, mw ...router.Middleware) {
 			http.Error(w, "invalid password", http.StatusUnauthorized)
 			return
 		}
-		db.GetUsers().Update(agData.Id, true)
+		u.Update(agData.Id, true)
 	}, mw...)
 }

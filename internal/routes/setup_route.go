@@ -13,15 +13,15 @@ HandleSetup responds with the version file (vFilePath), route authorization
 ID header, & red33m status header. The client should use the ID, when
 requesting from routes protected by the auth guard middleware.
 */
-func HandleSetup(r *router.Router, vFilePath string, mw ...router.Middleware) {
+func HandleSetup(r *router.Router, vFilePath string, u *db.Users, mw ...router.Middleware) {
 	r.Get(
 		"/setup",
-		getSetupHandler(vFilePath),
+		getSetupHandler(vFilePath, u),
 		mw...,
 	)
 }
 
-func getSetupHandler(vFilePath string) http.HandlerFunc {
+func getSetupHandler(vFilePath string, u *db.Users) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 
@@ -30,10 +30,8 @@ func getSetupHandler(vFilePath string) http.HandlerFunc {
 			return
 		}
 
-		users := db.GetUsers()
-
 		if authHeader == "Bearer setup" {
-			id := users.Add(false)
+			id := u.Add(false)
 			w.Header().Add("X-Evex-Id", id)
 			w.Header().Add("X-Evex-Red33m", "no")
 			sendVersionFile(w, r, vFilePath)
@@ -41,7 +39,7 @@ func getSetupHandler(vFilePath string) http.HandlerFunc {
 		}
 
 		id := strings.TrimPrefix(authHeader, "Bearer ")
-		state, err := users.GetState(id)
+		state, err := u.GetState(id)
 		if err != nil {
 			// Client should try to get a new ID
 			http.Error(w, "Authorization Expired or Missing", http.StatusUnauthorized)

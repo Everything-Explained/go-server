@@ -19,17 +19,18 @@ func TestSetupRoute(t *testing.T) {
 	reset := testutils.SetTempDir(t)
 	defer reset()
 
-	err := db.CreateUsers(internal.Getwd())
+	u, err := db.NewUsers(internal.Getwd())
 	if err != nil {
 		panic(err)
 	}
+	defer u.Close()
 
 	r := router.NewRouter()
 	err = os.WriteFile("mock.txt", []byte("test text"), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	HandleSetup(r, internal.Getwd()+"/mock.txt")
+	HandleSetup(r, internal.Getwd()+"/mock.txt", u)
 	expBody := "Malformed Authorization\n"
 
 	t.Run("detects bad authorization header", func(t *testing.T) {
@@ -97,10 +98,7 @@ func TestSetupRoute(t *testing.T) {
 			)
 		}
 
-		users := db.GetUsers()
-		defer users.Close()
-
-		isRed33med, err := users.GetState(id)
+		isRed33med, err := u.GetState(id)
 		if err != nil {
 			t.Error(testutils.PrintErrorD("Return the user state", "user to exist", err))
 		}
@@ -121,7 +119,7 @@ func TestSetupRoute(t *testing.T) {
 	})
 
 	t.Run("detects authenticated user", func(t *testing.T) {
-		id, _ := db.GetUsers().GetRandomUserId()
+		id, _ := u.GetRandomUserId()
 		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
 			"Authorization": {"Bearer " + id},
 		})
@@ -160,7 +158,6 @@ func TestSetupRoute(t *testing.T) {
 	})
 
 	t.Run("detects redeem user", func(t *testing.T) {
-		u := db.GetUsers()
 		id, _ := u.GetRandomUserId()
 		u.Update(id, true)
 		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{

@@ -14,42 +14,30 @@ import (
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
-var users *Users
-
 /*
-CreateUsers initializes the users database at the specified
-directory. This function can only be effectively called
-once, since it initializes a singleton.
-
-📝 Subsequent calls to CreateUsers() are effectively ignored.
+NewUsers initializes a new user database at the specified
+directory.
 */
-func CreateUsers(dir string) error {
-	if users == nil {
-		filePath := dir + "/users.txt"
-		f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0o644)
-		if err != nil {
-			return fmt.Errorf("file error::%s", err)
-		}
-
-		go saveRoutine(500)
-
-		parsedUsers, err := parseUsers(filePath)
-		if err != nil {
-			return fmt.Errorf("user parse error::%s", err)
-		}
-
-		users = &Users{
-			users:      parsedUsers,
-			fileWriter: writers.NewFileWriter(f),
-			resumeCh:   make(chan bool, 1),
-		}
+func NewUsers(dir string) (*Users, error) {
+	filePath := dir + "/users.txt"
+	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("file error::%s", err)
 	}
-	return nil
-}
 
-func GetUsers() *Users {
-	checkIfCreated()
-	return users
+	parsedUsers, err := parseUsers(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("user parse error::%s", err)
+	}
+
+	u := &Users{
+		users:      parsedUsers,
+		fileWriter: writers.NewFileWriter(f),
+		resumeCh:   make(chan bool, 1),
+	}
+
+	go u.saveRoutine(500)
+	return u, nil
 }
 
 type Users struct {
@@ -69,14 +57,12 @@ the users struct.
 closed will cause unexpected behavior.
 */
 func (u *Users) Close() {
-	checkIfCreated()
 	close(u.fileWriter.Channel)
 	close(u.resumeCh)
 	u.fileWriter.WaitGroup.Wait()
 }
 
 func (u *Users) Add(isRed33m bool) string {
-	checkIfCreated()
 	var red33mState bool
 	if isRed33m {
 		red33mState = true
@@ -95,7 +81,6 @@ func (u *Users) Add(isRed33m bool) string {
 }
 
 func (u *Users) Update(userid string, isRed33m bool) {
-	checkIfCreated()
 	var red33mState bool
 	if isRed33m {
 		red33mState = true
@@ -112,7 +97,6 @@ func (u *Users) Update(userid string, isRed33m bool) {
 }
 
 func (u *Users) Clean() int {
-	checkIfCreated()
 	delCount := 0
 	var sb strings.Builder
 	u.Lock()
@@ -130,7 +114,6 @@ func (u *Users) Clean() int {
 }
 
 func (u *Users) GetState(userid string) (bool, error) {
-	checkIfCreated()
 	u.Lock()
 	userState, exists := u.users[userid]
 	u.Unlock()
@@ -143,12 +126,10 @@ func (u *Users) GetState(userid string) (bool, error) {
 }
 
 func (u *Users) GetLength() int {
-	checkIfCreated()
 	return len(u.users)
 }
 
 func (u *Users) GetRandomUserId() (string, error) {
-	checkIfCreated()
 	randIdx := rand.Intn(len(u.users)) // #nosec G404 -- not applicable
 	count := 0
 	for k := range u.users {
@@ -164,17 +145,11 @@ func (u *Users) GetRandomUserId() (string, error) {
 	)
 }
 
-func checkIfCreated() {
-	if users == nil {
-		panic("users not initialized; did you forget to create it?")
-	}
-}
-
 /*
 saveRoutine saves users on a cycle, to allow concurrent writes to the user
 map without deadlocks.
 */
-func saveRoutine(saveDelay uint16) {
+func (u *Users) saveRoutine(saveDelay uint16) {
 	if saveDelay < 30 {
 		panic("save delay must be at least 30 milliseconds")
 	}
@@ -185,7 +160,6 @@ func saveRoutine(saveDelay uint16) {
 		sb := strings.Builder{}
 		time.Sleep(time.Duration(saveDelay) * time.Millisecond)
 
-		u := GetUsers()
 		u.Lock()
 		isPausing := u.lastSavedMilli == lastWriteMilli
 		u.isPaused = isPausing
