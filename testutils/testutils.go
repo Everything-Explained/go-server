@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -62,4 +63,18 @@ func SetTempDir(t *testing.T) func() {
 			t.Fatal(err)
 		}
 	}
+}
+
+func TestPanic(t *testing.T, errContains string, why string) {
+	err := recover()
+	if err != nil {
+		if !strings.Contains(err.(string), errContains) {
+			t.Error(
+				PrintErrorD("panic should contain specific message", errContains, err.(string)),
+			)
+		}
+		return
+	}
+
+	t.Error(PrintErrorD("should panic when: "+why, "panic", "no panic"))
 }
