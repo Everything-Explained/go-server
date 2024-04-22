@@ -34,10 +34,16 @@ func getSummaryDataHandler(dataPath string) http.HandlerFunc {
 		agData := middleware.GetAuthGuardData(r)
 		content := r.PathValue("content")
 		visibility := r.PathValue("visibility")
-		notRed33med := strings.Contains(visibility, "red33m") && !agData.IsRed33med
+
+		if strings.Contains(visibility, "red33m") {
+			if !agData.IsRed33med {
+				http.Error(w, "Not Authorized", http.StatusUnauthorized)
+				return
+			}
+		}
 
 		// Only supports non-file requests
-		if strings.Contains(visibility, ".") || notRed33med {
+		if strings.Contains(visibility, ".") {
 			http.Error(w, "File Not Found", http.StatusNotFound)
 			return
 		}
@@ -56,10 +62,16 @@ func getMDHTMLHandler(dataPath string) http.HandlerFunc {
 		content := r.PathValue("content")
 		visibility := r.PathValue("visibility")
 		file := r.PathValue("file")
-		notRed33med := strings.Contains(visibility, "red33m") && !agData.IsRed33med
+
+		if strings.Contains(visibility, "red33m") {
+			if !agData.IsRed33med {
+				http.Error(w, "Not Authorized", http.StatusUnauthorized)
+				return
+			}
+		}
 
 		// Only supports MDHTML files
-		if !strings.HasSuffix(file, ".mdhtml") || notRed33med {
+		if !strings.HasSuffix(file, ".mdhtml") {
 			http.Error(w, "File Not Found", http.StatusNotFound)
 			return
 		}
