@@ -12,9 +12,14 @@ import (
 	"github.com/Everything-Explained/go-server/internal/middleware"
 	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/testutils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDataRoute(t *testing.T) {
+	assert := assert.New(t)
+	rq := require.New(t)
+
 	t.Parallel()
 	tmpDir := t.TempDir()
 	_ = os.Mkdir(tmpDir+"/blog", fs.FileMode(os.O_WRONLY))
@@ -22,21 +27,23 @@ func TestDataRoute(t *testing.T) {
 	_ = os.Mkdir(tmpDir+"/blog/red33m", fs.FileMode(os.O_WRONLY))
 
 	u, err := db.NewUsers(tmpDir)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
+	rq.NoError(err, "should initialize new users")
+
 	defer u.Close()
 	u.Add(false)
 	userID, err := u.GetRandomUserId()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
+	rq.NoError(err, "should get random user id")
 
 	t.Run("panic on missing auth middleware", func(t *testing.T) {
 		r := router.NewRouter()
-		defer testutils.TestPanic(t, "missing auth guard", "missing auth guard")
 		HandleData(r, tmpDir)
-		testutils.MockRequest(r.Handler, "GET", "/data/blog/public", nil)
+		assert.PanicsWithValue(
+			"missing auth guard data; did you forget to add the auth guard middleware?",
+			func() {
+				testutils.MockRequest(r.Handler, "GET", "/data/blog/public", nil)
+			},
+			"should panic because of missing auth guard",
+		)
 	})
 
 	t.Run("passes summary uri spec", func(t *testing.T) {
@@ -53,45 +60,23 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusOK {
-			t.Error(testutils.PrintErrorD("correct status code", 200, rec.Code))
-		}
-
-		if rec.Body.String() != "test text" {
-			t.Error(testutils.PrintErrorD("correct body text", "test text", rec.Body.String()))
-		}
+		assert.Equal(200, rec.Code, "should be StatusOk")
+		assert.Equal(rec.Body.String(), "test text", "correct body text")
 
 		contentType := rec.Header().Get("Content-Type")
 		wantedType := "application/json; charset=utf-8"
-		if contentType != wantedType {
-			t.Error(
-				testutils.PrintErrorD(
-					"correct content type header",
-					wantedType,
-					contentType,
-				),
-			)
-		}
+		assert.Equal(contentType, wantedType, "should contain JSON content type")
 
 		cacheControl := rec.Header().Get("Cache-Control")
-		if !strings.Contains(cacheControl, "max-age=") {
-			t.Error(testutils.PrintErrorD("cache control age", "max-age", cacheControl))
-		}
+		rq.Contains(cacheControl, "max-age=", "should have max-age cache control")
 
 		// 3 months
 		minMaxAge := 60 * 60 * 24 * 30 * 3
 		age, err := strconv.Atoi(strings.Split(cacheControl, "max-age=")[1])
-		if err != nil {
-			t.Fatalf("could not convert max age to integer: %s", cacheControl)
-		}
+		rq.NoError(err, "convert max-age to integer")
 
-		if age < minMaxAge {
-			t.Error(testutils.PrintErrorD("max-age > 3 months", minMaxAge, age))
-		}
-
-		if rec.Header().Get("Last-Modified") == "" {
-			t.Error(testutils.PrintErrorS("Last-Modified header", "no Last-Modified header"))
-		}
+		assert.LessOrEqual(minMaxAge, age, "minimum max-age >= 3 months")
+		assert.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
 	})
 
 	t.Run("summary uri returns 404 when files requested", func(t *testing.T) {
@@ -107,9 +92,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusNotFound {
-			t.Error(testutils.PrintErrorD("correct status code", http.StatusNotFound, rec.Code))
-		}
+		assert.Equal(rec.Code, http.StatusNotFound)
 	})
 
 	t.Run("passes mdhtml uri spec", func(t *testing.T) {
@@ -126,45 +109,24 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusOK {
-			t.Error(testutils.PrintErrorD("correct status code", 200, rec.Code))
-		}
+		assert.Equal(rec.Code, http.StatusOK, "status code")
 
-		if rec.Body.String() != "i am mdhtml" {
-			t.Error(testutils.PrintErrorD("correct body text", "test text", rec.Body.String()))
-		}
+		assert.Equal(rec.Body.String(), "i am mdhtml", "expected body text")
 
 		contentType := rec.Header().Get("Content-Type")
 		wantedType := "text/html; charset=utf-8"
-		if contentType != wantedType {
-			t.Error(
-				testutils.PrintErrorD(
-					"correct content type header",
-					wantedType,
-					contentType,
-				),
-			)
-		}
+		assert.Equal(contentType, wantedType, "should have expected content type")
 
 		cacheControl := rec.Header().Get("Cache-Control")
-		if !strings.Contains(cacheControl, "max-age=") {
-			t.Error(testutils.PrintErrorD("cache control age", "max-age", cacheControl))
-		}
+		rq.Contains(cacheControl, "max-age=", "should have max-age cache control")
 
 		// 3 months
 		minMaxAge := 60 * 60 * 24 * 30 * 3
 		age, err := strconv.Atoi(strings.Split(cacheControl, "max-age=")[1])
-		if err != nil {
-			t.Fatalf("could not convert max age to integer: %s", cacheControl)
-		}
+		rq.NoError(err, "convert max-age to integer")
 
-		if age < minMaxAge {
-			t.Error(testutils.PrintErrorD("max-age > 3 months", minMaxAge, age))
-		}
-
-		if rec.Header().Get("Last-Modified") == "" {
-			t.Error(testutils.PrintErrorS("Last-Modified header", "no Last-Modified header"))
-		}
+		assert.LessOrEqual(minMaxAge, age, "minimum max-age >= 3 months")
+		assert.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
 	})
 
 	t.Run("mdhtml uri returns 404 when non-files requested", func(t *testing.T) {
@@ -181,11 +143,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusNotFound {
-			t.Error(
-				testutils.PrintErrorD("a Not Found status code", http.StatusNotFound, rec.Code),
-			)
-		}
+		assert.Equal(rec.Code, http.StatusNotFound, "expect not found")
 	})
 
 	t.Run("summary uri protects redeem routes", func(t *testing.T) {
@@ -201,15 +159,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusUnauthorized {
-			t.Error(
-				testutils.PrintErrorD(
-					"return Forbidden status",
-					http.StatusUnauthorized,
-					rec.Code,
-				),
-			)
-		}
+		assert.Equal(rec.Code, http.StatusUnauthorized, "expect status unauthorized")
 
 		rec = testutils.MockRequest(
 			r.Handler,
@@ -220,15 +170,11 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusUnauthorized {
-			t.Error(
-				testutils.PrintErrorD(
-					"return Unauthorized before Not Found status",
-					http.StatusUnauthorized,
-					rec.Code,
-				),
-			)
-		}
+		assert.Equal(
+			rec.Code,
+			http.StatusUnauthorized,
+			"expect unauthorized before 'not found' status",
+		)
 	})
 
 	t.Run("mdhtml uri protects redeem routes", func(t *testing.T) {
@@ -245,15 +191,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusUnauthorized {
-			t.Error(
-				testutils.PrintErrorD(
-					"return Forbidden status",
-					http.StatusUnauthorized,
-					rec.Code,
-				),
-			)
-		}
+		assert.Equal(rec.Code, http.StatusUnauthorized, "expect status unauthorized")
 
 		rec = testutils.MockRequest(
 			r.Handler,
@@ -264,14 +202,10 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		if rec.Code != http.StatusUnauthorized {
-			t.Error(
-				testutils.PrintErrorD(
-					"return Unauthorized before Not Found status",
-					http.StatusUnauthorized,
-					rec.Code,
-				),
-			)
-		}
+		assert.Equal(
+			rec.Code,
+			http.StatusUnauthorized,
+			"expect unauthorized before 'not found' status",
+		)
 	})
 }
