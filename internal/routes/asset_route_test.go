@@ -11,21 +11,21 @@ import (
 )
 
 func TestAssetRoute(t *testing.T) {
-	reset := testutils.SetTempDir(t)
-	defer reset()
+	t.Parallel()
+	dir := t.TempDir()
 
-	err := os.Mkdir("./mocks", 0o644)
+	err := os.Mkdir(dir+"/mocks", 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = os.WriteFile("./mocks/mock.txt", []byte("test text"), 0o600)
+	err = os.WriteFile(dir+"/mocks/mock.txt", []byte("test text"), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := router.NewRouter()
-	HandleAssets(r, "./mocks")
+	HandleAssets(r, dir+"/mocks")
 
 	rec := testutils.MockRequest(r.Handler, "GET", "/assets/mock.txt", nil)
 
