@@ -28,7 +28,7 @@ Getwd gets the working directory. Wraps the built-in os.Getwd()
 so we can just panic in the extremely rare case that it
 returns an error.
 
-🔴 Panics for any error returned by the os.Getwd().
+🔴 Panics for any error returned by os.Getwd().
 */
 func Getwd() string {
 	wd, err := os.Getwd()

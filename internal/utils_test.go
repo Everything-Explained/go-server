@@ -4,59 +4,45 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Everything-Explained/go-server/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorkingDir(t *testing.T) {
+	t.Parallel()
 	t.Run("gets working directory", func(t *testing.T) {
-		got := Getwd()
-		want, _ := os.Getwd()
-		if got != want {
-			t.Error(testutils.PrintErrorS(got, want))
-		}
-	})
-
-	t.Run("gets active working dir", func(t *testing.T) {
-		err := os.Chdir("../")
-		if err != nil {
-			t.Fatalf("Unexpected error: %s", err)
-		}
-		got := Getwd()
-		want, _ := os.Getwd()
-		if got != want {
-			t.Error(testutils.PrintErrorS(want, got))
-		}
+		want, err := os.Getwd()
+		assert.NoError(t, err, "get working directory")
+		assert.Equal(t, want, Getwd())
 	})
 }
 
 func TestID(t *testing.T) {
 	t.Parallel()
 
-	t.Run("Long", func(t *testing.T) {
-		got := len(GetLongID())
-
-		if got < 21 {
-			want := "long IDs should be at least, canonical length (21)"
-			t.Error(testutils.PrintErrorS(want, got))
-		}
+	t.Run("long id", func(t *testing.T) {
+		assert.Greater(
+			t,
+			len(GetLongID()),
+			20,
+			"long id should be at least canonical length (21)",
+		)
 	})
 
-	t.Run("Short", func(t *testing.T) {
-		got := len(GetShortID())
-
-		if got >= 21 {
-			want := "short IDs should be less than canonical length (21)"
-			t.Error(testutils.PrintErrorS(want, got))
-		}
+	t.Run("short id", func(t *testing.T) {
+		assert.Less(
+			t,
+			len(GetShortID()),
+			21,
+			"short id should be less than canonical length (21)",
+		)
 	})
 
 	t.Run("LengthDiff", func(t *testing.T) {
-		shortLen := len(GetShortID())
-		longLen := len(GetLongID())
-
-		if longLen-shortLen < 5 {
-			ex := "min distance between short & long IDs is 5"
-			t.Error(testutils.PrintErrorD(ex, shortLen, longLen))
-		}
+		assert.GreaterOrEqual(
+			t,
+			len(GetLongID())-len(GetShortID()),
+			5,
+			"min distance between short & long id",
+		)
 	})
 }
