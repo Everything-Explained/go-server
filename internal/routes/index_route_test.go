@@ -1,79 +1,61 @@
 package routes
 
 import (
-	"io"
 	"net/http"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/Everything-Explained/go-server/internal/router"
 	"github.com/Everything-Explained/go-server/testutils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIndexRoute(t *testing.T) {
-	reset := testutils.SetTempDir(t)
-	defer reset()
-
+	t.Parallel()
+	dir := t.TempDir()
 	r := router.NewRouter()
-	err := os.WriteFile("mock.html", []byte("index text"), 0o600)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-	HandleIndex(r, "./mock.html")
+	err := os.WriteFile(dir+"/mock.html", []byte("index text"), 0o600)
+	require.NoError(t, err, "write mock file")
 
-	resp := testutils.MockRequest(r.Handler, "GET", "/", nil)
+	HandleIndex(r, dir+"/mock.html")
 
-	t.Run("has 200 status", func(t *testing.T) {
-		if resp.Code != http.StatusOK {
-			t.Error(testutils.PrintErrorS(http.StatusOK, resp.Code))
-		}
+	t.Run("panic if handling index without file", func(t *testing.T) {
+		r := router.NewRouter()
+		assert.PanicsWithValue(
+			t,
+			"index route needs a file path, not folder path",
+			func() { HandleIndex(r, dir+"/mock") },
+			"panic when passing an invalid index file",
+		)
 	})
 
-	t.Run("has html content type", func(t *testing.T) {
-		got := resp.Result().Header.Get("Content-Type")
-		want := "text/html; charset=utf-8"
-
-		if got != want {
-			t.Error(testutils.PrintErrorS(want, got))
-		}
+	t.Run("returns index on root url request", func(t *testing.T) {
+		resp := testutils.MockRequest(r.Handler, "GET", "/", nil)
+		assert.Equal(t, http.StatusOK, resp.Code, "returns status ok")
+		assert.Equal(t, "index text", resp.Body.String(), "return index file")
+		assert.Equal(
+			t,
+			"text/html; charset=utf-8",
+			resp.Result().Header.Get("Content-Type"),
+			"should have html content type",
+		)
 	})
 
-	t.Run("returns index when default url", func(t *testing.T) {
-		data, _ := io.ReadAll(resp.Body)
-		got := strings.TrimSpace(string(data))
-		want := "index text"
-
-		if got != want {
-			t.Error(testutils.PrintErrorS(want, got))
-		}
-	})
-
-	t.Run("returns index when index.html", func(t *testing.T) {
+	t.Run("returns index on index.html request", func(t *testing.T) {
 		resp := testutils.MockRequest(r.Handler, "GET", "/index.html", nil)
-
-		wantStatus := http.StatusOK
-		gotStatus := resp.Code
-
-		if wantStatus != gotStatus {
-			t.Error(testutils.PrintErrorS(wantStatus, gotStatus))
-		}
-
-		d, _ := io.ReadAll(resp.Body)
-		gotBody := strings.TrimSpace(string(d))
-		wantBody := "index text"
-
-		if wantBody != gotBody {
-			t.Error(testutils.PrintErrorS(wantBody, gotBody))
-		}
+		assert.Equal(t, http.StatusOK, resp.Code, "return status ok")
+		assert.Equal(t, "index text", resp.Body.String(), "return index contents")
 	})
 
-	t.Run("returns index when unknown url", func(t *testing.T) {
-		wantStatus := http.StatusOK
-		gotStatus := resp.Code
+	t.Run("returns index on unknown uri request", func(t *testing.T) {
+		resp := testutils.MockRequest(r.Handler, "GET", "/unknown/url", nil)
+		assert.Equal(t, http.StatusOK, resp.Code, "return status ok")
+		assert.Equal(t, "index text", resp.Body.String(), "return index contents")
+	})
 
-		if wantStatus != gotStatus {
-			t.Error(testutils.PrintErrorS(wantStatus, gotStatus))
-		}
+	t.Run("return 404 on file request", func(t *testing.T) {
+		resp := testutils.MockRequest(r.Handler, "GET", "/unknown/file.ext", nil)
+		assert.Equal(t, http.StatusNotFound, resp.Code, "return status 'not found'")
 	})
 }

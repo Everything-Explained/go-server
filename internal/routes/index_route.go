@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,7 +8,6 @@ import (
 )
 
 func HandleIndex(r *router.Router, filePath string, mw ...router.Middleware) {
-	fmt.Printf("index path: %s\n", filePath)
 	if !strings.Contains(filePath, ".") {
 		panic("index route needs a file path, not folder path")
 	}
