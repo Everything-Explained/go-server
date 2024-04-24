@@ -34,7 +34,7 @@ func TestSetupRoute(t *testing.T) {
 	HandleSetup(r, dir+"/mock.txt", u)
 	expBody := "Malformed Authorization\n"
 
-	t.Run("detects bad authorization header", func(t *testing.T) {
+	t.Run("detects bad authorization header", func(*testing.T) {
 		authTable := []string{
 			"",
 			" ",
@@ -57,7 +57,7 @@ func TestSetupRoute(t *testing.T) {
 		}
 	})
 
-	t.Run("detects unauthorized request", func(t *testing.T) {
+	t.Run("detects unauthorized request", func(*testing.T) {
 		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
 			"Authorization": {"Bearer gibberish"},
 		})
@@ -70,7 +70,7 @@ func TestSetupRoute(t *testing.T) {
 		)
 	})
 
-	t.Run("adds users", func(t *testing.T) {
+	t.Run("adds users", func(*testing.T) {
 		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
 			"Authorization": {"Bearer setup"},
 		})
@@ -86,7 +86,7 @@ func TestSetupRoute(t *testing.T) {
 		assert.Equal("test text", resp.Body.String(), "returns expected body")
 	})
 
-	t.Run("detects authenticated user", func(t *testing.T) {
+	t.Run("detects authenticated user", func(*testing.T) {
 		id, _ := u.GetRandomUserId()
 		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
 			"Authorization": {"Bearer " + id},
@@ -103,7 +103,7 @@ func TestSetupRoute(t *testing.T) {
 		assert.Equal("no", red33mVal, "should have red33m")
 	})
 
-	t.Run("detects redeem user", func(t *testing.T) {
+	t.Run("detects redeem user", func(*testing.T) {
 		id, _ := u.GetRandomUserId()
 		u.Update(id, true)
 		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{

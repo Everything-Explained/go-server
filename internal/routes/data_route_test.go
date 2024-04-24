@@ -34,7 +34,7 @@ func TestDataRoute(t *testing.T) {
 	userID, err := u.GetRandomUserId()
 	rq.NoError(err, "should get random user id")
 
-	t.Run("panic on missing auth middleware", func(t *testing.T) {
+	t.Run("panic on missing auth middleware", func(*testing.T) {
 		r := router.NewRouter()
 		HandleData(r, tmpDir)
 		assert.PanicsWithValue(
@@ -46,7 +46,7 @@ func TestDataRoute(t *testing.T) {
 		)
 	})
 
-	t.Run("passes summary uri spec", func(t *testing.T) {
+	t.Run("passes summary uri spec", func(*testing.T) {
 		r := router.NewRouter()
 		_ = os.WriteFile(tmpDir+"/blog/public/public.json", []byte("test text"), 0o600)
 		HandleData(r, tmpDir, middleware.AuthGuard(u))
@@ -79,7 +79,7 @@ func TestDataRoute(t *testing.T) {
 		assert.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
 	})
 
-	t.Run("summary uri returns 404 when files requested", func(t *testing.T) {
+	t.Run("summary uri returns 404 when files requested", func(*testing.T) {
 		r := router.NewRouter()
 		HandleData(r, tmpDir, middleware.AuthGuard(u))
 
@@ -95,7 +95,7 @@ func TestDataRoute(t *testing.T) {
 		assert.Equal(rec.Code, http.StatusNotFound)
 	})
 
-	t.Run("passes mdhtml uri spec", func(t *testing.T) {
+	t.Run("passes mdhtml uri spec", func(*testing.T) {
 		r := router.NewRouter()
 		HandleData(r, tmpDir, middleware.AuthGuard(u))
 		_ = os.WriteFile(tmpDir+"/blog/public/1234567890.mdhtml", []byte("i am mdhtml"), 0o600)
@@ -129,7 +129,7 @@ func TestDataRoute(t *testing.T) {
 		assert.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
 	})
 
-	t.Run("mdhtml uri returns 404 when non-files requested", func(t *testing.T) {
+	t.Run("mdhtml uri returns 404 when non-files requested", func(*testing.T) {
 		r := router.NewRouter()
 		HandleData(r, tmpDir, middleware.AuthGuard(u))
 		_ = os.WriteFile(tmpDir+"/blog/public/0987654321.mdhtml", []byte("i am mdhtml"), 0o600)
@@ -146,7 +146,7 @@ func TestDataRoute(t *testing.T) {
 		assert.Equal(rec.Code, http.StatusNotFound, "expect not found")
 	})
 
-	t.Run("summary uri protects redeem routes", func(t *testing.T) {
+	t.Run("summary uri protects redeem routes", func(*testing.T) {
 		r := router.NewRouter()
 		HandleData(r, tmpDir, middleware.AuthGuard(u))
 
@@ -177,7 +177,7 @@ func TestDataRoute(t *testing.T) {
 		)
 	})
 
-	t.Run("mdhtml uri protects redeem routes", func(t *testing.T) {
+	t.Run("mdhtml uri protects redeem routes", func(*testing.T) {
 		r := router.NewRouter()
 		_ = os.WriteFile(tmpDir+"/blog/red33m/12345.mdhtml", []byte("test text"), 0o600)
 		HandleData(r, tmpDir, middleware.AuthGuard(u))
