@@ -17,7 +17,7 @@ import (
 )
 
 func TestDataRoute(t *testing.T) {
-	assert := assert.New(t)
+	a := assert.New(t)
 	rq := require.New(t)
 
 	t.Parallel()
@@ -37,7 +37,7 @@ func TestDataRoute(t *testing.T) {
 	t.Run("panic on missing auth middleware", func(*testing.T) {
 		r := router.NewRouter()
 		HandleData(r, tmpDir)
-		assert.PanicsWithValue(
+		a.PanicsWithValue(
 			"missing auth guard data; did you forget to add the auth guard middleware?",
 			func() {
 				testutils.MockRequest(r.Handler, "GET", "/data/blog/public", nil)
@@ -60,12 +60,12 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(200, rec.Code, "should be StatusOk")
-		assert.Equal(rec.Body.String(), "test text", "correct body text")
+		a.Equal(200, rec.Code, "should be StatusOk")
+		a.Equal(rec.Body.String(), "test text", "correct body text")
 
 		contentType := rec.Header().Get("Content-Type")
 		wantedType := "application/json; charset=utf-8"
-		assert.Equal(contentType, wantedType, "should contain JSON content type")
+		a.Equal(contentType, wantedType, "should contain JSON content type")
 
 		cacheControl := rec.Header().Get("Cache-Control")
 		rq.Contains(cacheControl, "max-age=", "should have max-age cache control")
@@ -75,8 +75,8 @@ func TestDataRoute(t *testing.T) {
 		age, err := strconv.Atoi(strings.Split(cacheControl, "max-age=")[1])
 		rq.NoError(err, "convert max-age to integer")
 
-		assert.LessOrEqual(minMaxAge, age, "minimum max-age >= 3 months")
-		assert.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
+		a.LessOrEqual(minMaxAge, age, "minimum max-age >= 3 months")
+		a.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
 	})
 
 	t.Run("summary uri returns 404 when files requested", func(*testing.T) {
@@ -92,7 +92,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(rec.Code, http.StatusNotFound)
+		a.Equal(rec.Code, http.StatusNotFound)
 	})
 
 	t.Run("passes mdhtml uri spec", func(*testing.T) {
@@ -109,13 +109,13 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(rec.Code, http.StatusOK, "status code")
+		a.Equal(rec.Code, http.StatusOK, "status code")
 
-		assert.Equal(rec.Body.String(), "i am mdhtml", "expected body text")
+		a.Equal(rec.Body.String(), "i am mdhtml", "expected body text")
 
 		contentType := rec.Header().Get("Content-Type")
 		wantedType := "text/html; charset=utf-8"
-		assert.Equal(contentType, wantedType, "should have expected content type")
+		a.Equal(contentType, wantedType, "should have expected content type")
 
 		cacheControl := rec.Header().Get("Cache-Control")
 		rq.Contains(cacheControl, "max-age=", "should have max-age cache control")
@@ -125,8 +125,8 @@ func TestDataRoute(t *testing.T) {
 		age, err := strconv.Atoi(strings.Split(cacheControl, "max-age=")[1])
 		rq.NoError(err, "convert max-age to integer")
 
-		assert.LessOrEqual(minMaxAge, age, "minimum max-age >= 3 months")
-		assert.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
+		a.LessOrEqual(minMaxAge, age, "minimum max-age >= 3 months")
+		a.NotEmpty(rec.Header().Get("Last-Modified"), "should have Last-Modified header")
 	})
 
 	t.Run("mdhtml uri returns 404 when non-files requested", func(*testing.T) {
@@ -143,7 +143,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(rec.Code, http.StatusNotFound, "expect not found")
+		a.Equal(rec.Code, http.StatusNotFound, "expect not found")
 	})
 
 	t.Run("summary uri protects redeem routes", func(*testing.T) {
@@ -159,7 +159,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(rec.Code, http.StatusUnauthorized, "expect status unauthorized")
+		a.Equal(rec.Code, http.StatusUnauthorized, "expect status unauthorized")
 
 		rec = testutils.MockRequest(
 			r.Handler,
@@ -170,7 +170,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(
+		a.Equal(
 			rec.Code,
 			http.StatusUnauthorized,
 			"expect unauthorized before 'not found' status",
@@ -191,7 +191,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(rec.Code, http.StatusUnauthorized, "expect status unauthorized")
+		a.Equal(rec.Code, http.StatusUnauthorized, "expect status unauthorized")
 
 		rec = testutils.MockRequest(
 			r.Handler,
@@ -202,7 +202,7 @@ func TestDataRoute(t *testing.T) {
 			},
 		)
 
-		assert.Equal(
+		a.Equal(
 			rec.Code,
 			http.StatusUnauthorized,
 			"expect unauthorized before 'not found' status",

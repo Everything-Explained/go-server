@@ -18,7 +18,7 @@ type Mock403 struct {
 
 func TestSetupRoute(t *testing.T) {
 	t.Parallel()
-	assert := assert.New(t)
+	a := assert.New(t)
 	rq := require.New(t)
 
 	dir := t.TempDir()
@@ -52,8 +52,8 @@ func TestSetupRoute(t *testing.T) {
 				}
 			}
 			resp := testutils.MockRequest(r.Handler, "GET", "/setup", headers)
-			assert.Equal(http.StatusForbidden, resp.Code, "forbid bad authentication")
-			assert.Equal(expBody, resp.Body.String(), "return expected body")
+			a.Equal(http.StatusForbidden, resp.Code, "forbid bad authentication")
+			a.Equal(expBody, resp.Body.String(), "return expected body")
 		}
 	})
 
@@ -62,8 +62,8 @@ func TestSetupRoute(t *testing.T) {
 			"Authorization": {"Bearer gibberish"},
 		})
 
-		assert.Equal(http.StatusUnauthorized, resp.Code, "expect unauthorized status")
-		assert.Equal(
+		a.Equal(http.StatusUnauthorized, resp.Code, "expect unauthorized status")
+		a.Equal(
 			"Authorization Expired or Missing\n",
 			resp.Body.String(),
 			"return expected body",
@@ -75,15 +75,15 @@ func TestSetupRoute(t *testing.T) {
 			"Authorization": {"Bearer setup"},
 		})
 
-		assert.Equal(http.StatusOK, resp.Code, "expected status ok")
+		a.Equal(http.StatusOK, resp.Code, "expected status ok")
 
 		id := resp.Header().Get("X-Evex-Id")
-		assert.NotEmpty(id, "expected X-Evex-Id header to exist")
+		a.NotEmpty(id, "expected X-Evex-Id header to exist")
 
 		isRed33med, err := u.GetState(id)
-		assert.NoError(err, "user should exist")
-		assert.False(isRed33med, "user should not have red33m access by default")
-		assert.Equal("test text", resp.Body.String(), "returns expected body")
+		a.NoError(err, "user should exist")
+		a.False(isRed33med, "user should not have red33m access by default")
+		a.Equal("test text", resp.Body.String(), "returns expected body")
 	})
 
 	t.Run("detects authenticated user", func(*testing.T) {
@@ -92,15 +92,15 @@ func TestSetupRoute(t *testing.T) {
 			"Authorization": {"Bearer " + id},
 		})
 
-		assert.Equal(http.StatusOK, resp.Code, "expected status ok")
+		a.Equal(http.StatusOK, resp.Code, "expected status ok")
 
-		assert.Equal("test text", resp.Body.String(), "returns expected body")
+		a.Equal("test text", resp.Body.String(), "returns expected body")
 
 		idHeader := resp.Header().Get("X-Evex-Id")
-		assert.Empty(idHeader, "should not include ID header")
+		a.Empty(idHeader, "should not include ID header")
 
 		red33mVal := resp.Header().Get("X-Evex-Red33m")
-		assert.Equal("no", red33mVal, "should have red33m")
+		a.Equal("no", red33mVal, "should have red33m")
 	})
 
 	t.Run("detects redeem user", func(*testing.T) {
@@ -110,9 +110,9 @@ func TestSetupRoute(t *testing.T) {
 			"Authorization": {"Bearer " + id},
 		})
 
-		assert.Equal(http.StatusOK, resp.Code, "expected status ok")
+		a.Equal(http.StatusOK, resp.Code, "expected status ok")
 
 		red33mVal := resp.Header().Get("X-Evex-Red33m")
-		assert.Equal("yes", red33mVal, "should have red33m")
+		a.Equal("yes", red33mVal, "should have red33m")
 	})
 }

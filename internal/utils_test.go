@@ -18,10 +18,10 @@ func TestWorkingDir(t *testing.T) {
 
 func TestID(t *testing.T) {
 	t.Parallel()
-	assert := assert.New(t)
+	a := assert.New(t)
 
 	t.Run("long id", func(*testing.T) {
-		assert.Greater(
+		a.Greater(
 			len(GetLongID()),
 			20,
 			"long id should be at least canonical length (21)",
@@ -29,7 +29,7 @@ func TestID(t *testing.T) {
 	})
 
 	t.Run("short id", func(*testing.T) {
-		assert.Less(
+		a.Less(
 			len(GetShortID()),
 			21,
 			"short id should be less than canonical length (21)",
@@ -37,7 +37,7 @@ func TestID(t *testing.T) {
 	})
 
 	t.Run("LengthDiff", func(*testing.T) {
-		assert.GreaterOrEqual(
+		a.GreaterOrEqual(
 			len(GetLongID())-len(GetShortID()),
 			5,
 			"min distance between short & long id",

@@ -13,7 +13,7 @@ import (
 
 func TestAssetRoute(t *testing.T) {
 	t.Parallel()
-	assert := assert.New(t)
+	a := assert.New(t)
 	rq := require.New(t)
 
 	dir := t.TempDir()
@@ -29,5 +29,5 @@ func TestAssetRoute(t *testing.T) {
 	rec := testutils.MockRequest(r.Handler, "GET", "/assets/mock.txt", nil)
 
 	rq.Equal(http.StatusOK, rec.Code, "expect StatusOk")
-	assert.Equal("test text", rec.Body.String(), "returns expected body text")
+	a.Equal("test text", rec.Body.String(), "returns expected body text")
 }
