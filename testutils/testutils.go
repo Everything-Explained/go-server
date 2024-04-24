@@ -1,12 +1,8 @@
 package testutils
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"strings"
-	"testing"
 )
 
 func MockRequest(
@@ -22,59 +18,4 @@ func MockRequest(
 	}
 	h.ServeHTTP(w, req)
 	return w
-}
-
-// PrintErrorS returns a string formatted for simple test errors
-func PrintErrorS(want any, got any) string {
-	return fmt.Sprintf("\n\t(WANT= %v) \n\t( GOT= %v)", want, got)
-}
-
-/*
-PrintErrorD returns a string formatted for descriptive test errors,
-allowing for an expectation to describe what should be happening.
-*/
-func PrintErrorD(expected string, want any, got any) string {
-	return fmt.Sprintf(
-		"\n\t(EXPECTED= %s) \n\t(    WANT= %v) \n\t(     GOT= %v)",
-		expected,
-		want,
-		got,
-	)
-}
-
-/*
-SetTempDir changes the current working directory to a
-temporary directory that can be reset with the
-returned function.
-*/
-func SetTempDir(t *testing.T) func() {
-	oldDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	tmpDir := t.TempDir()
-	err = os.Chdir(tmpDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return func() {
-		err := os.Chdir(oldDir)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-}
-
-func TestPanic(t *testing.T, errContains string, why string) {
-	err := recover()
-	if err != nil {
-		if !strings.Contains(err.(string), errContains) {
-			t.Error(
-				PrintErrorD("panic should contain specific message", errContains, err.(string)),
-			)
-		}
-		return
-	}
-
-	t.Error(PrintErrorD("should panic when: "+why, "panic", "no panic"))
 }
