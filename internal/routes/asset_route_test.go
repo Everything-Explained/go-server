@@ -26,7 +26,7 @@ func TestAssetRoute(t *testing.T) {
 	r := router.NewRouter()
 	HandleAssets(r, dir+"/mocks")
 
-	rec := testutils.MockRequest(r.Handler, "GET", "/assets/mock.txt", nil)
+	rec := testutils.MockRequest(r.Handler, "GET", "/assets/mock.txt", nil, nil)
 
 	rq.Equal(http.StatusOK, rec.Code, "expect StatusOk")
 	a.Equal("test text", rec.Body.String(), "returns expected body text")

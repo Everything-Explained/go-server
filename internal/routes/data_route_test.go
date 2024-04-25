@@ -40,7 +40,7 @@ func TestDataRoute(t *testing.T) {
 		a.PanicsWithValue(
 			"missing auth guard data; did you forget to add the auth guard middleware?",
 			func() {
-				testutils.MockRequest(r.Handler, "GET", "/data/blog/public", nil)
+				testutils.MockRequest(r.Handler, "GET", "/data/blog/public", nil, nil)
 			},
 			"should panic because of missing auth guard",
 		)
@@ -55,6 +55,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/public",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},
@@ -87,6 +88,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/public/public.json",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},
@@ -104,6 +106,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/public/1234567890.mdhtml",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},
@@ -138,6 +141,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/public/0987654321",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},
@@ -154,6 +158,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/red33m",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},
@@ -165,6 +170,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/red33m.json",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},
@@ -186,6 +192,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/red33m/12345.mdhtml",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},
@@ -197,6 +204,7 @@ func TestDataRoute(t *testing.T) {
 			r.Handler,
 			"GET",
 			"/data/blog/red33m/12345",
+			nil,
 			&map[string][]string{
 				"Authorization": {"Bearer " + userID},
 			},

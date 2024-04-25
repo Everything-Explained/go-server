@@ -51,14 +51,14 @@ func TestSetupRoute(t *testing.T) {
 					},
 				}
 			}
-			resp := testutils.MockRequest(r.Handler, "GET", "/setup", headers)
+			resp := testutils.MockRequest(r.Handler, "GET", "/setup", nil, headers)
 			a.Equal(http.StatusForbidden, resp.Code, "forbid bad authentication")
 			a.Equal(expBody, resp.Body.String(), "return expected body")
 		}
 	})
 
 	t.Run("detects unauthorized request", func(*testing.T) {
-		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
+		resp := testutils.MockRequest(r.Handler, "GET", "/setup", nil, &map[string][]string{
 			"Authorization": {"Bearer gibberish"},
 		})
 
@@ -71,7 +71,7 @@ func TestSetupRoute(t *testing.T) {
 	})
 
 	t.Run("adds users", func(*testing.T) {
-		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
+		resp := testutils.MockRequest(r.Handler, "GET", "/setup", nil, &map[string][]string{
 			"Authorization": {"Bearer setup"},
 		})
 
@@ -88,7 +88,7 @@ func TestSetupRoute(t *testing.T) {
 
 	t.Run("detects authenticated user", func(*testing.T) {
 		id, _ := u.GetRandomUserId()
-		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
+		resp := testutils.MockRequest(r.Handler, "GET", "/setup", nil, &map[string][]string{
 			"Authorization": {"Bearer " + id},
 		})
 
@@ -106,7 +106,7 @@ func TestSetupRoute(t *testing.T) {
 	t.Run("detects redeem user", func(*testing.T) {
 		id, _ := u.GetRandomUserId()
 		u.Update(id, true)
-		resp := testutils.MockRequest(r.Handler, "GET", "/setup", &map[string][]string{
+		resp := testutils.MockRequest(r.Handler, "GET", "/setup", nil, &map[string][]string{
 			"Authorization": {"Bearer " + id},
 		})
 

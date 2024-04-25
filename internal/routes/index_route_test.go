@@ -31,7 +31,7 @@ func TestIndexRoute(t *testing.T) {
 	})
 
 	t.Run("returns index on root url request", func(*testing.T) {
-		resp := testutils.MockRequest(r.Handler, "GET", "/", nil)
+		resp := testutils.MockRequest(r.Handler, "GET", "/", nil, nil)
 		a.Equal(http.StatusOK, resp.Code, "returns status ok")
 		a.Equal("index text", resp.Body.String(), "return index file")
 		a.Equal(
@@ -42,19 +42,19 @@ func TestIndexRoute(t *testing.T) {
 	})
 
 	t.Run("returns index on index.html request", func(*testing.T) {
-		resp := testutils.MockRequest(r.Handler, "GET", "/index.html", nil)
+		resp := testutils.MockRequest(r.Handler, "GET", "/index.html", nil, nil)
 		a.Equal(http.StatusOK, resp.Code, "return status ok")
 		a.Equal("index text", resp.Body.String(), "return index contents")
 	})
 
 	t.Run("returns index on unknown uri request", func(*testing.T) {
-		resp := testutils.MockRequest(r.Handler, "GET", "/unknown/url", nil)
+		resp := testutils.MockRequest(r.Handler, "GET", "/unknown/url", nil, nil)
 		a.Equal(http.StatusOK, resp.Code, "return status ok")
 		a.Equal("index text", resp.Body.String(), "return index contents")
 	})
 
 	t.Run("return 404 on file request", func(*testing.T) {
-		resp := testutils.MockRequest(r.Handler, "GET", "/unknown/file.ext", nil)
+		resp := testutils.MockRequest(r.Handler, "GET", "/unknown/file.ext", nil, nil)
 		a.Equal(http.StatusNotFound, resp.Code, "return status 'not found'")
 	})
 }
