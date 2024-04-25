@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Everything-Explained/go-server/configs"
@@ -44,6 +45,7 @@ func HandleRed33m(
 			http.Error(w, "Invalid Password", http.StatusUnauthorized)
 			return
 		}
+		fmt.Fprint(w, "Login Successful\n")
 		u.Update(agData.Id, true)
 	}, mw...)
 }
