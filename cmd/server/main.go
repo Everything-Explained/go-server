@@ -12,7 +12,10 @@ import (
 )
 
 func main() {
-	cfg := configs.GetConfig()
+	cfg, err := configs.GetConfig("./configs")
+	if err != nil {
+		panic(err)
+	}
 
 	u, err := db.NewUsers(internal.Getwd())
 	if err != nil {
@@ -21,8 +24,12 @@ func main() {
 
 	rootRouter := router.NewRouter()
 
-	assetDir := configs.GetConfig().ClientPath + "/assets"
-	routes.HandleAssets(rootRouter, assetDir, middleware.LogRequests(http.StatusBadRequest))
+	routes.HandleAssets(
+		rootRouter,
+		cfg.ClientPath+"/assets",
+		middleware.LogRequests(http.StatusBadRequest),
+	)
+
 	routes.HandleSetup(
 		rootRouter,
 		cfg.DataPath+"/versions.json",
@@ -33,13 +40,12 @@ func main() {
 	routes.HandleIndex(
 		rootRouter,
 		cfg.ClientPath+"/index.html",
-		middleware.LogRequests(0),
+		middleware.LogRequests(http.StatusBadRequest),
 	)
 
 	authRouter := router.NewRouter()
-	routes.HandleRed33m(authRouter, u)
-	dataPath := configs.GetConfig().DataPath
-	routes.HandleData(authRouter, dataPath)
+	routes.HandleRed33m(authRouter, u, cfg)
+	routes.HandleData(authRouter, cfg.DataPath)
 
 	router.AddSubRoute(
 		"/authed",

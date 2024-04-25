@@ -1,32 +1,35 @@
 package configs
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/Everything-Explained/go-server/internal"
 	"github.com/joho/godotenv"
 )
-
-var env Environment
 
 type Environment struct {
 	InDev          bool
 	ConfigFilePath string
 }
 
-func GetEnv() Environment {
-	if env.ConfigFilePath == "" {
-		wd := internal.Getwd()
-		if err := godotenv.Load(wd + "/configs/.env.dev"); err != nil {
-			if err = godotenv.Load(wd + "/configs/.env.prod"); err != nil {
-				panic(err)
-			}
-		}
+func GetEnv(dir string) (*Environment, error) {
+	_, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return nil, fmt.Errorf("directory not found::%s", dir)
+	}
 
-		env = Environment{
-			InDev:          os.Getenv("ENV") == "dev",
-			ConfigFilePath: wd + "/configs/" + os.Getenv("CONFIG_FILE"),
+	if err != nil {
+		return nil, err
+	}
+
+	if err := godotenv.Load(dir + "/.env.dev"); err != nil {
+		if err = godotenv.Load(dir + "/.env.prod"); err != nil {
+			return nil, err
 		}
 	}
-	return env
+
+	return &Environment{
+		InDev:          os.Getenv("ENV") == "dev",
+		ConfigFilePath: dir + "/" + os.Getenv("CONFIG_FILE"),
+	}, nil
 }

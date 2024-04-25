@@ -16,7 +16,12 @@ red33m content.
 
 🟠 Requires the auth guard middleware.
 */
-func HandleRed33m(rt *router.Router, u *db.Users, mw ...router.Middleware) {
+func HandleRed33m(
+	rt *router.Router,
+	u *db.Users,
+	cfg *configs.ConfigData,
+	mw ...router.Middleware,
+) {
 	rt.Post("/red33m", func(w http.ResponseWriter, r *http.Request) {
 		agData := middleware.GetAuthGuardData(r)
 
@@ -32,7 +37,7 @@ func HandleRed33m(rt *router.Router, u *db.Users, mw ...router.Middleware) {
 		}
 
 		err := bcrypt.CompareHashAndPassword(
-			[]byte(configs.GetConfig().Red33mPassword),
+			[]byte(cfg.Red33mPassword),
 			[]byte(body),
 		)
 		if err != nil {

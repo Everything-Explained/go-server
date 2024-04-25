@@ -24,24 +24,22 @@ type ConfigData struct {
 }
 
 // IMPORTANT: Implement embedding config.yml files
-var config ConfigData
-
-func GetConfig() ConfigData {
-	if config.Port == 0 {
-		content, err := os.ReadFile(GetEnv().ConfigFilePath)
-		if err != nil {
-			panic(err)
-		}
-
-		err = yaml.Unmarshal(content, &config)
-		if err != nil {
-			panic(err)
-		}
+func GetConfig(dir string) (*ConfigData, error) {
+	env, err := GetEnv(dir)
+	if err != nil {
+		return nil, err
 	}
 
-	return copyConfig(config)
-}
+	content, err := os.ReadFile(env.ConfigFilePath)
+	if err != nil {
+		return nil, err
+	}
 
-func copyConfig(c ConfigData) ConfigData {
-	return c
+	var config ConfigData
+	err = yaml.Unmarshal(content, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
 }
