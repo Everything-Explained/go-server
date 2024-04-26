@@ -8,7 +8,8 @@ import (
 func NewFileWriter(file *os.File) *FileWriter {
 	ch := make(chan ChannelData, 1000)
 	fw := &FileWriter{
-		Channel: ch,
+		inChan:  ch,
+		OutChan: make(chan bool),
 		file:    file,
 	}
 	fw.WaitGroup.Add(1)
@@ -24,19 +25,21 @@ type ChannelData struct {
 
 type FileWriter struct {
 	WaitGroup sync.WaitGroup
-	Channel   chan ChannelData
-	file      *os.File
+	// 'true' on every completed file write
+	OutChan chan bool
+	inChan  chan ChannelData
+	file    *os.File
 }
 
 func (fa *FileWriter) WriteString(s string, isAppending bool) {
-	fa.Channel <- ChannelData{
+	fa.inChan <- ChannelData{
 		IsAppending: isAppending,
 		String:      s,
 	}
 }
 
 func (fa *FileWriter) Close() {
-	fa.Channel <- ChannelData{
+	fa.inChan <- ChannelData{
 		close: true,
 	}
 }
@@ -44,9 +47,10 @@ func (fa *FileWriter) Close() {
 func fileChannel(fw *FileWriter, file *os.File) {
 	defer fw.WaitGroup.Done()
 
-	for chanData := range fw.Channel {
+	for chanData := range fw.inChan {
 		if chanData.close {
-			close(fw.Channel)
+			close(fw.inChan)
+			close(fw.OutChan)
 			break
 		}
 
@@ -55,6 +59,7 @@ func fileChannel(fw *FileWriter, file *os.File) {
 			if err != nil {
 				panic(err)
 			}
+			fw.OutChan <- true
 			continue
 		}
 
@@ -72,6 +77,7 @@ func fileChannel(fw *FileWriter, file *os.File) {
 		if err != nil {
 			panic(err)
 		}
+		fw.OutChan <- true
 	}
 
 	if file != nil {
