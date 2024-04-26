@@ -57,7 +57,7 @@ the users struct.
 closed will cause unexpected behavior.
 */
 func (u *Users) Close() {
-	close(u.fileWriter.Channel)
+	u.fileWriter.Close()
 	close(u.resumeCh)
 	u.fileWriter.WaitGroup.Wait()
 }
