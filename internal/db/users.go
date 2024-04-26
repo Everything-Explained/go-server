@@ -57,9 +57,12 @@ the users struct.
 closed will cause unexpected behavior.
 */
 func (u *Users) Close() {
-	u.fileWriter.Close()
+	u.Lock()
+	u.resumeCh <- false
 	close(u.resumeCh)
+	u.fileWriter.Close()
 	u.fileWriter.WaitGroup.Wait()
+	u.Unlock()
 }
 
 func (u *Users) Add(isRed33m bool) string {
@@ -166,7 +169,10 @@ func (u *Users) saveRoutine(saveDelay uint16) {
 		u.Unlock()
 
 		if isPausing {
-			<-u.resumeCh
+			isResuming := <-u.resumeCh
+			if !isResuming {
+				break
+			}
 		}
 
 		u.Lock()
