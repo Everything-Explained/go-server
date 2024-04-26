@@ -42,6 +42,7 @@ func (fa *FileWriter) Close() {
 	fa.inChan <- ChannelData{
 		close: true,
 	}
+	fa.WaitGroup.Wait()
 }
 
 func fileChannel(fw *FileWriter, file *os.File) {
