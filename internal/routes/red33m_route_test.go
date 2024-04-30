@@ -30,7 +30,7 @@ func TestRedeemRoute(t *testing.T) {
 
 	uid := u.Add(false)
 	r := router.NewRouter()
-	HandleRed33m(r, u, cfg, middleware.AuthGuard(u))
+	HandleRed33m(r, u, cfg.Red33mPassword, middleware.AuthGuard(u))
 
 	t.Run("detect missing body", func(*testing.T) {
 		resp := testutils.MockRequest(r.Handler, "POST", "/red33m", nil, &map[string][]string{
@@ -94,7 +94,7 @@ func TestRedeemRoute(t *testing.T) {
 	})
 }
 
-func mockConfig(t *testing.T, tmpDir string, cfgDir string) *configs.ConfigData {
+func mockConfig(t *testing.T, tmpDir string, cfgDir string) configs.ConfigData {
 	rq := require.New(t)
 
 	envFile, err := os.Open(cfgDir + "/.env.dev")

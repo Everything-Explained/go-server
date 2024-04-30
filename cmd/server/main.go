@@ -44,7 +44,7 @@ func main() {
 	)
 
 	authRouter := router.NewRouter()
-	routes.HandleRed33m(authRouter, u, cfg)
+	routes.HandleRed33m(authRouter, u, cfg.Red33mPassword)
 	routes.HandleData(authRouter, cfg.DataPath)
 
 	router.AddSubRoute(
