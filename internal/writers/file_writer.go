@@ -5,12 +5,13 @@ import (
 	"sync"
 )
 
-func NewFileWriter(file *os.File) *FileWriter {
+func NewFileWriter(file *os.File, manualOut bool) *FileWriter {
 	ch := make(chan ChannelData, 1000)
 	fw := &FileWriter{
-		inChan:  ch,
-		OutChan: make(chan bool),
-		file:    file,
+		inChan:    ch,
+		OutChan:   make(chan bool),
+		manualOut: manualOut,
+		file:      file,
 	}
 	fw.WaitGroup.Add(1)
 	go fileChannel(fw, file)
@@ -26,9 +27,10 @@ type ChannelData struct {
 type FileWriter struct {
 	WaitGroup sync.WaitGroup
 	// 'true' on every completed file write
-	OutChan chan bool
-	inChan  chan ChannelData
-	file    *os.File
+	OutChan   chan bool
+	manualOut bool
+	inChan    chan ChannelData
+	file      *os.File
 }
 
 func (fa *FileWriter) WriteString(s string, isAppending bool) {
@@ -60,7 +62,9 @@ func fileChannel(fw *FileWriter, file *os.File) {
 			if err != nil {
 				panic(err)
 			}
-			fw.OutChan <- true
+			if fw.manualOut {
+				fw.OutChan <- true
+			}
 			continue
 		}
 
@@ -78,7 +82,10 @@ func fileChannel(fw *FileWriter, file *os.File) {
 		if err != nil {
 			panic(err)
 		}
-		fw.OutChan <- true
+
+		if fw.manualOut {
+			fw.OutChan <- true
+		}
 	}
 
 	if file != nil {

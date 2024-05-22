@@ -47,7 +47,7 @@ func NewLogWriter(name string) error {
 		return err
 	}
 
-	logs[name] = NewFileWriter(f)
+	logs[name] = NewFileWriter(f, false)
 	return nil
 }
 

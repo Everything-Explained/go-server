@@ -34,7 +34,7 @@ func NewUsers(dir string) (*Users, error) {
 
 	u := &Users{
 		users:      parsedUsers,
-		fileWriter: writers.NewFileWriter(f),
+		fileWriter: writers.NewFileWriter(f, false),
 		resumeCh:   make(chan bool, 1),
 	}
 
