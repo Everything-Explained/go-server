@@ -118,6 +118,13 @@ func (u *Users) Update(userid string, isRed33m bool) error {
 	return nil
 }
 
+/*
+Clean removes all user ids that are not logged in with a
+red33m passcode.
+
+🟡 This should not be hooked up to any public API on
+the website.
+*/
 func (u *Users) Clean() (int, error) {
 	u.Lock()
 	if u.isClosed {
