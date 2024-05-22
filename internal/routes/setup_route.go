@@ -31,7 +31,10 @@ func getSetupHandler(vFilePath string, u *db.Users) http.HandlerFunc {
 		}
 
 		if authHeader == "Bearer setup" {
-			id := u.Add(false)
+			id, err := u.Add(false)
+			if err != nil {
+				panic(err)
+			}
 			w.Header().Add("X-Evex-Id", id)
 			w.Header().Add("X-Evex-Red33m", "no")
 			sendVersionFile(w, r, vFilePath)

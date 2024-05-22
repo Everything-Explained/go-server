@@ -14,6 +14,8 @@ import (
 	"github.com/Everything-Explained/go-server/internal/writers"
 )
 
+var ErrUsersClosed = errors.New("user database has been closed")
+
 /*
 NewUsers initializes a new user database at the specified
 directory.
@@ -47,14 +49,12 @@ type Users struct {
 	resumeCh       chan bool
 	isPaused       bool
 	lastSavedMilli int64
+	isClosed       bool
 }
 
 /*
 Close closes the channels and file writer associated with
 the users struct.
-
-🟠 Continuing to use the users struct after it has been
-closed will cause unexpected behavior.
 */
 func (u *Users) Close() {
 	u.Lock()
@@ -62,33 +62,52 @@ func (u *Users) Close() {
 	close(u.resumeCh)
 	u.fileWriter.Close()
 	u.fileWriter.WaitGroup.Wait()
+	u.isClosed = true
 	u.Unlock()
 }
 
-func (u *Users) Add(isRed33m bool) string {
+func (u *Users) Add(isRed33m bool) (string, error) {
+	u.Lock()
+	if u.isClosed {
+		u.Unlock()
+		return "", ErrUsersClosed
+	}
+	u.Unlock()
+
 	var red33mState bool
 	if isRed33m {
 		red33mState = true
 	}
 	newID := internal.GetLongID()
 	now := time.Now().UnixMilli()
+
 	u.Lock()
+	defer u.Unlock()
 	u.users[newID] = red33mState
 	u.lastSavedMilli = now
 	if u.isPaused {
 		u.isPaused = false
 		u.resumeCh <- true
 	}
-	u.Unlock()
-	return newID
+	return newID, nil
 }
 
-func (u *Users) Update(userid string, isRed33m bool) {
+func (u *Users) Update(userid string, isRed33m bool) error {
+	u.Lock()
+	if u.isClosed {
+		u.Unlock()
+		return ErrUsersClosed
+	}
+	u.Unlock()
+
 	var red33mState bool
 	if isRed33m {
 		red33mState = true
 	}
+
 	u.Lock()
+	defer u.Unlock()
+
 	if _, exists := u.users[userid]; exists {
 		u.users[userid] = red33mState
 		if u.isPaused {
@@ -96,13 +115,23 @@ func (u *Users) Update(userid string, isRed33m bool) {
 			u.resumeCh <- true
 		}
 	}
-	u.Unlock()
+	return nil
 }
 
-func (u *Users) Clean() int {
+func (u *Users) Clean() (int, error) {
+	u.Lock()
+	if u.isClosed {
+		u.Unlock()
+		return 0, ErrUsersClosed
+	}
+	u.Unlock()
+
 	delCount := 0
 	var sb strings.Builder
+
 	u.Lock()
+	defer u.Unlock()
+
 	for k, v := range u.users {
 		if !v {
 			delCount++
@@ -112,12 +141,15 @@ func (u *Users) Clean() int {
 		_, _ = sb.WriteString(fmt.Sprintf("%s: %d\n", k, 1))
 	}
 	u.fileWriter.WriteString(sb.String(), false)
-	u.Unlock()
-	return delCount
+	return delCount, nil
 }
 
 func (u *Users) GetState(userid string) (bool, error) {
 	u.Lock()
+	if u.isClosed {
+		u.Unlock()
+		return false, ErrUsersClosed
+	}
 	userState, exists := u.users[userid]
 	u.Unlock()
 

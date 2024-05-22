@@ -28,7 +28,9 @@ func TestRedeemRoute(t *testing.T) {
 	rq.NoError(err, "mock users database")
 	defer u.Close()
 
-	uid := u.Add(false)
+	uid, err := u.Add(false)
+	rq.NoError(err, "add test user to database")
+
 	r := router.NewRouter()
 	HandleRed33m(r, u, cfg.Red33mPassword, middleware.AuthGuard(u))
 
@@ -55,7 +57,10 @@ func TestRedeemRoute(t *testing.T) {
 	})
 
 	t.Run("detect already logged in", func(*testing.T) {
-		uid := u.Add(true)
+		uid, err := u.Add(true)
+		if err != nil {
+			panic(err)
+		}
 		resp := testutils.MockRequest(
 			r.Handler,
 			"POST",
@@ -70,7 +75,7 @@ func TestRedeemRoute(t *testing.T) {
 	})
 
 	t.Run("successful login", func(*testing.T) {
-		uid := u.Add(false)
+		uid, err := u.Add(false)
 		uState, err := u.GetState(uid)
 		rq.NoError(err, "get mocked user state")
 		rq.False(uState, "expect false red33m state")
