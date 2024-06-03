@@ -45,6 +45,6 @@ func HandleRed33m(
 			return
 		}
 		fmt.Fprint(w, "Login Successful\n")
-		u.Update(agData.Id, true)
+		u.Update(agData.UserID, true)
 	}, mw...)
 }

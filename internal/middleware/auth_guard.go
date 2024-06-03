@@ -14,7 +14,7 @@ var AuthGuardContextKey = &internal.ContextKey{Name: "auth"}
 
 type AuthGuardData struct {
 	IsRed33med bool
-	Id         string
+	UserID     string
 }
 
 func GetAuthGuardData(r *http.Request) AuthGuardData {
@@ -34,8 +34,8 @@ func AuthGuard(u *db.Users) func(http.Handler) http.Handler {
 				return
 			}
 
-			id := strings.TrimPrefix(authHeader, "Bearer ")
-			isRed33med, err := u.GetState(id)
+			userID := strings.TrimPrefix(authHeader, "Bearer ")
+			isRed33med, err := u.GetState(userID)
 			if err != nil {
 				http.Error(w, "Bad User", http.StatusForbidden)
 				return
@@ -43,7 +43,7 @@ func AuthGuard(u *db.Users) func(http.Handler) http.Handler {
 
 			ctx := context.WithValue(r.Context(), AuthGuardContextKey, AuthGuardData{
 				IsRed33med: isRed33med,
-				Id:         id,
+				UserID:     userID,
 			})
 
 			next.ServeHTTP(w, r.WithContext(ctx))
