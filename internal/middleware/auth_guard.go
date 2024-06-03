@@ -14,7 +14,6 @@ var AuthGuardContextKey = &internal.ContextKey{Name: "auth"}
 
 type AuthGuardData struct {
 	IsRed33med bool
-	HasAuth    bool
 	Id         string
 }
 
@@ -44,7 +43,6 @@ func AuthGuard(u *db.Users) func(http.Handler) http.Handler {
 
 			ctx := context.WithValue(r.Context(), AuthGuardContextKey, AuthGuardData{
 				IsRed33med: isRed33med,
-				HasAuth:    true,
 				Id:         id,
 			})
 
