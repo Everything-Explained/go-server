@@ -10,9 +10,8 @@ import (
 )
 
 const (
-	logFolderPath string = "./logs"
-	separator     string = "<|>"
-	newLineChar   string = "\u200B"
+	separator   string = "<|>"
+	newLineChar string = "\u200B"
 )
 
 type LogLevel byte
@@ -29,19 +28,19 @@ var (
 )
 
 /*
-NewLogWriter initializes a new log file with the specified name.
+CreateLog initializes a new log file with the specified name.
 */
-func NewLogWriter(name string) error {
+func CreateLog(name string, logDir string) error {
 	if _, exists := logs[name]; exists {
 		return nil
 	}
 
-	err := os.MkdirAll(logFolderPath, 0o755)
+	err := os.MkdirAll(logDir, 0o755)
 	if err != nil {
 		return err
 	}
 
-	logFilePath := logFolderPath + "/" + name + ".txt"
+	logFilePath := logDir + "/" + name + ".txt"
 	f, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_APPEND, 0o644)
 	if err != nil {
 		return err
@@ -63,6 +62,15 @@ func (logger) Info(name string, messages ...any) {
 
 func (logger) Error(name string, messages ...any) {
 	log(name, ERROR, messages...)
+}
+
+func (logger) Close(name string) error {
+	f, ok := logs[name]
+	if !ok {
+		panic(fmt.Errorf("log not found: %s", name))
+	}
+	f.Close()
+	return nil
 }
 
 func log(name string, level LogLevel, messages ...any) {

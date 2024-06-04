@@ -24,23 +24,26 @@ func main() {
 
 	rootRouter := router.NewRouter()
 
+	closeLog, logByStatus := middleware.LogRequests(internal.Getwd() + "/logs")
+	defer closeLog()
+
 	routes.HandleAssets(
 		rootRouter,
 		cfg.ClientPath+"/assets",
-		middleware.LogRequests(http.StatusBadRequest),
+		logByStatus(http.StatusBadRequest),
 	)
 
 	routes.HandleSetup(
 		rootRouter,
 		cfg.DataPath+"/versions.json",
 		u,
-		middleware.LogRequests(http.StatusBadRequest),
+		logByStatus(http.StatusBadRequest),
 	)
 
 	routes.HandleIndex(
 		rootRouter,
 		cfg.ClientPath+"/index.html",
-		middleware.LogRequests(http.StatusBadRequest),
+		logByStatus(http.StatusBadRequest),
 	)
 
 	authRouter := router.NewRouter()
@@ -51,7 +54,7 @@ func main() {
 		"/authed",
 		rootRouter,
 		authRouter,
-		middleware.LogRequests(http.StatusBadRequest),
+		logByStatus(http.StatusBadRequest),
 		middleware.AuthGuard(u),
 	)
 
