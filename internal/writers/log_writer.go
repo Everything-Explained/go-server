@@ -64,13 +64,12 @@ func (logger) Error(name string, messages ...any) {
 	log(name, ERROR, messages...)
 }
 
-func (logger) Close(name string) error {
+func (logger) Close(name string) {
 	f, ok := logs[name]
 	if !ok {
 		panic(fmt.Errorf("log not found: %s", name))
 	}
 	f.Close()
-	return nil
 }
 
 func log(name string, level LogLevel, messages ...any) {
