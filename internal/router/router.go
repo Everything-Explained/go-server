@@ -114,6 +114,7 @@ func (r *Router) ListenAndServe(addr string, port int) error {
 		WriteTimeout: 8 * time.Second,
 		Handler:      r.Handler,
 	}
+	fmt.Printf("Listening on http://%s:%d\n", addr, port)
 	return s.ListenAndServe()
 }
 
