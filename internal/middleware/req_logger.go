@@ -26,15 +26,17 @@ to filter by minimum status code. If the status is set to 400, then no status
 below 400 will be logged. When you're done with the log, you can use the
 returned closeLog().
 */
-func LogRequests(dir string) (closeLog func(), logByStatus func(status int) router.Middleware) {
-	const logName = "requests"
-	err := writers.CreateLog(logName, dir)
+func LogRequests(
+	dir string,
+	fileName string,
+) (closeLog func(), logByStatus func(status int) router.Middleware) {
+	err := writers.CreateLog(fileName, dir)
 	if err != nil {
 		panic(err)
 	}
 
 	closeLog = func() {
-		writers.Log.Close(logName)
+		writers.Log.Close(fileName)
 	}
 
 	logByStatus = func(statusCode int) router.Middleware {
@@ -76,7 +78,7 @@ func LogRequests(dir string) (closeLog func(), logByStatus func(status int) rout
 				reqSpeed := fmt.Sprintf("%dµs", time.Now().UnixMicro()-now)
 
 				writers.Log.Info(
-					logName,
+					fileName,
 					agent,
 					country,
 					req.Method,

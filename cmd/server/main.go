@@ -24,7 +24,7 @@ func main() {
 
 	rootRouter := router.NewRouter()
 
-	closeLog, logByStatus := middleware.LogRequests(internal.Getwd() + "/logs")
+	closeLog, logByStatus := middleware.LogRequests(internal.Getwd()+"/logs", "requests")
 	defer closeLog()
 
 	routes.HandleAssets(
