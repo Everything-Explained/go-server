@@ -57,10 +57,7 @@ func LogRequests(dir string) (closeLog func(), logByStatus func(status int) rout
 				}
 
 				agent := strings.Join(req.Header["User-Agent"], ",")
-				country := strings.Join(
-					req.Header[http.CanonicalHeaderKey("CF-IPCountry")],
-					",",
-				)
+				country := req.Header.Get("CF-IPCountry")
 				now := time.Now().UnixMicro()
 
 				respWriterWrapper := &responseWrapper{
