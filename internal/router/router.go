@@ -34,7 +34,7 @@ func AddSubRoute(path string, parentRouter *Router, childRouter *Router, mw ...M
 		panic("sub-route cannot be the root route")
 	}
 
-	if path[:len(path)-1] == "/" {
+	if path[len(path)-1] == '/' {
 		panic("sub-route cannot have trailing forward slash '/'")
 	}
 
