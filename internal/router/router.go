@@ -82,7 +82,7 @@ func (r *Router) SetStaticRoute(
 	mw ...Middleware,
 ) {
 	if filepath.Ext(folderPath) != "" {
-		panic(fmt.Errorf("you provided a file path '%s' instead of a folder path", folderPath))
+		panic(fmt.Sprintf("you provided a file path '%s' instead of a folder path", folderPath))
 	}
 
 	if _, err := os.Stat(folderPath); err != nil {
