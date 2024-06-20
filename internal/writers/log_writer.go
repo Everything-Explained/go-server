@@ -76,7 +76,7 @@ func (Logger) Close(name string) {
 func log(name string, level LogLevel, messages ...any) {
 	l, exists := logs[name]
 	if !exists {
-		panic(fmt.Errorf("missing log named: '%s'", name))
+		panic(fmt.Sprintf("missing log named: '%s'", name))
 	}
 
 	id := internal.GetShortID()
