@@ -8,6 +8,7 @@ logs
 *config.yml
 config.json
 scratch.ts
+scratch.go
 private.key
 public.pem
 users.json
