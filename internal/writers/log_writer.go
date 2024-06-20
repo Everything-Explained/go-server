@@ -28,7 +28,8 @@ var (
 )
 
 /*
-CreateLog initializes a new log file with the specified name.
+CreateLog initializes a new log file with the specified name and
+directory.
 */
 func CreateLog(name string, logDir string) error {
 	if _, exists := logs[name]; exists {
