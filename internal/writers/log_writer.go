@@ -24,7 +24,7 @@ const (
 
 var (
 	logs = make(map[string]*FileWriter)
-	Log  = logger{}
+	Log  = Logger{}
 )
 
 /*
@@ -51,21 +51,21 @@ func CreateLog(name string, logDir string) error {
 	return nil
 }
 
-type logger struct{}
+type Logger struct{}
 
-func (logger) Debug(name string, messages ...any) {
+func (Logger) Debug(name string, messages ...any) {
 	log(name, DEBUG, messages...)
 }
 
-func (logger) Info(name string, messages ...any) {
+func (Logger) Info(name string, messages ...any) {
 	log(name, INFO, messages...)
 }
 
-func (logger) Error(name string, messages ...any) {
+func (Logger) Error(name string, messages ...any) {
 	log(name, ERROR, messages...)
 }
 
-func (logger) Close(name string) {
+func (Logger) Close(name string) {
 	f, ok := logs[name]
 	if !ok {
 		panic(fmt.Errorf("log not found: %s", name))
