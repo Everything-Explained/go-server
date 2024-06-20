@@ -93,7 +93,9 @@ func buildLog(messages ...any) string {
 	for _, msg := range messages {
 		_, _ = sb.WriteString(fmt.Sprintf("%s%v", separator, msg))
 	}
+
 	s := sb.String()
+	// Handle Windows line feed
 	if strings.Contains(s, "\r\n") {
 		return strings.ReplaceAll(s, "\r\n", newLineChar)
 	}
