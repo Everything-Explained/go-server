@@ -20,7 +20,7 @@ func TestLogWriter(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	t.Run("should create log file", func(*testing.T) {
-		err := CreateLog("log1", tmpDir)
+		err := NewLog("log1", tmpDir)
 		r.NoError(err, "create log file")
 		defer Log.Close("log1")
 
@@ -30,7 +30,7 @@ func TestLogWriter(t *testing.T) {
 	})
 
 	t.Run("should append to log file", func(*testing.T) {
-		err := CreateLog("log2", tmpDir)
+		err := NewLog("log2", tmpDir)
 		r.NoError(err, "create log file")
 		defer Log.Close("log2")
 

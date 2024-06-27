@@ -30,7 +30,7 @@ func LogRequests(
 	dir string,
 	fileName string,
 ) (closeLog func(), logByStatus func(status int) router.Middleware) {
-	err := writers.CreateLog(fileName, dir)
+	err := writers.NewLog(fileName, dir)
 	if err != nil {
 		panic(err)
 	}
