@@ -107,15 +107,14 @@ func (r *Router) SetStaticRoute(
 	}, mw...)
 }
 
-func (r *Router) ListenAndServe(addr string, port int) error {
-	s := http.Server{
+func (r *Router) SetupServer(addr string, port int) *http.Server {
+	s := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", addr, port),
 		ReadTimeout:  8 * time.Second,
 		WriteTimeout: 8 * time.Second,
 		Handler:      r.Handler,
 	}
-	fmt.Printf("Listening on http://%s:%d\n", addr, port)
-	return s.ListenAndServe()
+	return s
 }
 
 func GetContextValue[T any](key any, r *http.Request) (T, error) {

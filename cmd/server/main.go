@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/Everything-Explained/go-server/configs"
 	"github.com/Everything-Explained/go-server/internal"
@@ -58,7 +63,20 @@ func main() {
 		middleware.AuthGuard(u),
 	)
 
-	err = rootRouter.ListenAndServe("127.0.0.1", cfg.Port)
+	server := rootRouter.SetupServer("127.0.0.1", cfg.Port)
+
+	go func() {
+		fmt.Printf("Listening on: http://127.0.0.1:%d\n", cfg.Port)
+		err = server.ListenAndServe()
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	<-sigChan
+	fmt.Println("[SIGINT] Shutting Down...")
+
+	err = server.Shutdown(context.Background())
 	if err != nil {
 		panic(err)
 	}
